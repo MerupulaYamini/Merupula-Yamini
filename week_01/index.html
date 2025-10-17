@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DOGGOSNAP - Random Dog Generator</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Header Section -->
+    <header>
+      <div id="navbar" class="obj-width">
+        <a href="index.html" class="logo"
+          ><i class="bx bxs-dog"></i><span>DoggoSnap</span>
+        </a>
+        <ul id="menu">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="about.html" target="_blank">About</a></li>
+          <li><a href="help.html" target="_blank">Help</a></li>
+        </ul>
+        <i id="bar" class="bx bx-menu"></i>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main>
+      <section class="hero">
+        <div class="hero-box obj-width">
+          <div class="h-left">
+            <h1>See the Breed. <br />Love the Breed.</h1>
+            <p>
+              Get random images of any dog breed and discover how they look
+              before you buy or adopt!
+            </p>
+          </div>
+
+          <div class="h-right">
+            <div class="img-wrapper">
+              <img id="hero-image" src="images/hero.png" alt="Dogs" />
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Random Dog Section -->
+      <section class="dog-section obj-width sec-space">
+        <div calss="select">
+          <h2>Discover what this breed really looks like!</h2>
+          <div class="search">
+            <select id="breed-select">
+              <option value="">Select a breed</option>
+            </select>
+            <a href="#" id="g-btn">Submit</a>
+          </div>
+          <div class="dog-container">
+            <img id="dog-img" src="" alt="Random Dog" />
+          </div>
+        </div>
+      </section>
+    </main>
+    <!-- Footer -->
+    <footer class="footer obj">
+      <div class="obj-width">
+        <div class="top">
+          <div id="navbar" class="obj-width">
+            <a href="index.html" class="logo"
+              ><i class="bx bxs-dog"></i><span>DoggoSnap</span>
+            </a>
+          </div>
+          <div>
+            <a href="https://www.facebook.com/" target="_blank"><i class="bx bxl-facebook-square"></i></a>
+            <a href="https://www.instagram.com/" target="_blank"><i class="bx bxl-instagram-alt"></i></a>
+            <a href="https://twitter.com/" target="_blank"><i class="bx bxl-twitter"></i></a>
+            <a href="https://github.com/MerupulaYamini/Merupula-Yamini" target="_blank"><i class="bx bxl-github"></i></a>
+          </div>
+        </div>
+        <div class="bottom">
+          <div class="navfooterline">
+            <ul>
+              <li>
+                <a
+                  href="https://www.amazon.in/gp/help/customer/display.html?nodeId=200545940&ref_=footer_cou"
+                  id="nav_a"
+                  >Conditions of Use & Sale</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://www.amazon.in/gp/help/customer/display.html?nodeId=200534380&ref_=footer_privacy"
+                  id="nav_a"
+                  >Privacy Notice</a
+                >
+              </li>
+              <li>
+                <a
+                  href="https://www.amazon.in/gp/help/customer/display.html?nodeId=202075050&ref_=footer_iba"
+                  id="nav_a"
+                  >Interest-Based Ads
+                </a>
+              </li>
+            </ul>
+          </div>
+          <span>&copy 2025 DoggoSnap. All rights reserved.</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="app.js"></script>
+  </body>
+</html>

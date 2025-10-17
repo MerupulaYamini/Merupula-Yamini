@@ -1,0 +1,223 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  position: relative;
+}
+
+/* Global CSS */
+
+h1 {
+  font-size: 3rem;
+  font-weight: 600;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 60px;
+}
+h3 {
+  font-size: 1.2rem;
+  padding-bottom: 1rem;
+  font-weight: 500;
+}
+#g-btn {
+  text-decoration: none;
+  background-color: #51a995;
+  color: white;
+  padding: 9px 30px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+#g-btn:hover {
+  background-color: #3b7d6d;
+}
+.sec-space {
+  padding: 4rem 0;
+}
+.obj-width {
+  max-width: 1200px;
+  margin: auto;
+}
+
+/*Navbar*/
+header {
+  background-color: #1f4a40;
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  padding: 0 2rem;
+  z-index: 10;
+}
+
+#navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 80px;
+  padding: 0 2rem;
+  position: relative;
+}
+
+#navbar a {
+  text-decoration: none;
+}
+
+#navbar .logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #ffffff;
+}
+
+#navbar .logo i {
+  background: #ffffff;
+  color: #1f4a40;
+  border-radius: 14px;
+  font-size: 36px;
+  padding: 6px;
+}
+
+#navbar .logo span {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+#menu {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  list-style: none;
+}
+
+#menu li a {
+  color: white;
+  text-decoration: none;
+  margin-left: 40px;
+  font-size: 1.1rem;
+  font-weight: 500;
+  transition: 0.3s ease;
+}
+
+#menu li a:hover,
+#menu li a.active {
+  color: #51a995;
+}
+
+#bar {
+  color: white;
+  display: none;
+}
+/* About Content */
+.about {
+  padding-top: 120px;
+}
+.about-box h2{
+  color: black;
+}
+.about-box p {
+  color: #405e57;
+  opacity: 0.9;
+  line-height: 1.9;
+}
+
+
+/* Featured Gallery on About */
+.about-featured {
+  padding: 2rem 0 4rem;
+}
+.about-featured h2 {
+  color: #1f4a40;
+  text-align: center;
+}
+.about-featured .subtitle {
+  color: #1f4a40;
+  text-align: center;
+  opacity: 0.85;
+  margin-top: 6px;
+}
+.gallery {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+.card {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(31, 74, 64, 0.12);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.card:hover {
+  transform: translateY(-20px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+.card-image {
+  height: 220px;
+  background: #f6faf9;
+}
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.card-body {
+  padding: 1rem;
+}
+.card-body h3 {
+  color: #1f4a40;
+}
+
+/* Footer */
+.footer {
+  background-color: #1f4a40;
+  color: white;
+  padding: 0.5rem 0;
+  text-align: center;
+  height: 210px;
+}
+.footer .top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.footer .top div {
+  margin: 10px;
+}
+
+.footer i {
+  font-size: 1.8rem;
+  color: white;
+  margin: 0 10px;
+  transition: 0.3s;
+}
+
+.footer i:hover {
+  color: #51a995;
+}
+.navfooterline #nav_a {
+  text-decoration: none;
+  color: white;
+}
+.navfooterline ul {
+  display: flex;
+  list-style: none;
+  justify-content: center;
+}
+.navfooterline li {
+  padding-right: 25px;
+}
