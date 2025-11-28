@@ -23,8 +23,8 @@ public class JavaCollections {
         set.addItem("Monkey");
         set.addItem("Dog"); // duplicate not allowed
         set.displayItem();
-        System.out.println("Search Cat: " + set.searchItem("Cat"));
-        set.removeItem("Dog");
+        System.out.println("Search Cat: " + set.searchItem("Ca"));
+        set.removeItem("ant");
         set.displayItem();
 
         // Map Collection

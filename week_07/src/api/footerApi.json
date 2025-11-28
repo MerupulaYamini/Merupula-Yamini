@@ -1,0 +1,17 @@
+[
+  {
+    "icon": "MdPlace",
+    "title": "Find us",
+    "details": "Hyderabad, Telangana"
+  },
+  {
+    "icon": "IoCallSharp",
+    "title": "Call us",
+    "details": "9876543210"
+  },
+  {
+    "icon": "TbMailPlus",
+    "title": "Mail us",
+    "details": "contact@worldatlas.com"
+  }
+]
