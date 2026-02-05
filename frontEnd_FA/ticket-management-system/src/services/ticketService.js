@@ -284,3 +284,44 @@ export const updateTicketStatus = async (ticketId, status) => {
     throw error;
   }
 };
+
+/**
+ * Add a comment to a ticket
+ * @param {number} ticketId - Ticket ID
+ * @param {string} content - Comment content (max 5000 characters)
+ * @returns {Promise} Updated ticket data with new comment
+ */
+export const addComment = async (ticketId, content) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/comments`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ content }),
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to add comment',
+        data
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Add comment error:', error);
+    throw error;
+  }
+};

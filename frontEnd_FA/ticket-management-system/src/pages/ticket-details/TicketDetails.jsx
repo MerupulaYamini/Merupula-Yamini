@@ -16,7 +16,7 @@ import {
   LinkOutlined
 } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
-import { getTicketById, deleteTicket, updateTicketStatus, mapStatus, mapLabel } from '../../services/ticketService';
+import { getTicketById, deleteTicket, updateTicketStatus, addComment, mapStatus, mapLabel } from '../../services/ticketService';
 import {
   TicketDetailsContainer,
   TicketHeader,
@@ -91,6 +91,8 @@ const TicketDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [statusUpdating, setStatusUpdating] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   // Fetch ticket details on component mount
   useEffect(() => {
@@ -396,30 +398,29 @@ const TicketDetails = () => {
     // In real app, this would open/download the file
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) {
       message.warning('Please enter a comment');
       return;
     }
 
-    const comment = {
-      id: comments.length + 1,
-      author: 'Current User', // In real app, this would come from auth context
-      content: newComment,
-      timestamp: new Date().toLocaleString('en-US', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-      }),
-      isOnline: true
-    };
+    if (newComment.length > 5000) {
+      message.error('Comment cannot exceed 5000 characters');
+      return;
+    }
 
-    setComments([comment, ...comments]); // Add to top for latest first
-    setNewComment('');
-    message.success('Comment added successfully');
+    setCommentSubmitting(true);
+    try {
+      const updatedTicket = await addComment(ticketId, newComment.trim());
+      setTicket(updatedTicket);
+      setNewComment('');
+      message.success('Comment added successfully');
+    } catch (error) {
+      console.error('Add comment error:', error);
+      message.error(error.message || 'Failed to add comment');
+    } finally {
+      setCommentSubmitting(false);
+    }
   };
 
   const handleCommentChange = (e) => {
@@ -660,6 +661,30 @@ const TicketDetails = () => {
                   <CommentContent>No comments yet. Be the first to comment!</CommentContent>
                 )}
               </CommentsTimeline>
+
+              <CommentForm>
+                <CommentTextArea
+                  value={newComment}
+                  onChange={handleCommentChange}
+                  placeholder="Add your comment here... (max 5000 characters)"
+                  rows={4}
+                  disabled={commentSubmitting}
+                  maxLength={5000}
+                />
+                
+                <CommentActions>
+                  <span style={{ color: '#8c8c8c', fontSize: '12px' }}>
+                    {newComment.length}/5000 characters
+                  </span>
+                  <AddCommentButton 
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim() || commentSubmitting}
+                    loading={commentSubmitting}
+                  >
+                    {commentSubmitting ? 'Adding...' : 'Add Comment'}
+                  </AddCommentButton>
+                </CommentActions>
+              </CommentForm>
             </CommentsSection>
           </RightColumn>
         </TicketContent>
