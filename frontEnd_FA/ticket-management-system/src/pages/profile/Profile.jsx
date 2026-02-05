@@ -3,7 +3,7 @@ import { Form, Input, Upload, message } from 'antd';
 import { UserOutlined, UploadOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
-import { getUserById, getCurrentUser } from '../../services/authService';
+import { getUserById, getCurrentUser, getMyProfile, updateMyProfile, changePassword } from '../../services/authService';
 import {
   ProfileContainer,
   ProfileHeader,
@@ -43,6 +43,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // User data from API
   const [userData, setUserData] = useState({
@@ -92,21 +93,14 @@ const Profile = () => {
 
       let userDetails;
 
-      // If viewing own profile and not admin, use localStorage data
-      if (viewingOwnProfile && !isAdmin) {
-        console.log('Using localStorage data for employee profile');
-        userDetails = {
-          id: currentUser.userId,
-          username: currentUser.username,
-          email: currentUser.email,
-          bio: '', // Not stored in localStorage
-          status: 'ACTIVE', // Assume active if logged in
-          roles: currentUserRoles,
-          createdAt: new Date().toISOString() // Not available
-        };
+      // If viewing own profile, use the new profile API
+      if (viewingOwnProfile) {
+        console.log('Fetching own profile from /api/profile/me');
+        userDetails = await getMyProfile();
+        console.log('My profile fetched:', userDetails);
       } else {
-        // Admin viewing any profile or viewing another user's profile
-        console.log('Fetching user details from API');
+        // Admin viewing another user's profile
+        console.log('Admin fetching user details from API');
         userDetails = await getUserById(targetUserId);
         console.log('User profile fetched:', userDetails);
       }
@@ -137,26 +131,84 @@ const Profile = () => {
 
   const handleProfileSave = async (values) => {
     setProfileLoading(true);
-    console.log('Profile update values:', values);
+    console.log('=== PROFILE UPDATE ===');
+    console.log('Form values:', values);
     
-    setTimeout(() => {
-      setProfileLoading(false);
+    try {
+      const formData = new FormData();
+      
+      // Only add fields that have changed
+      if (values.username && values.username !== userData.username) {
+        formData.append('username', values.username);
+        console.log('  - username:', values.username);
+      }
+      
+      if (values.bio !== undefined && values.bio !== userData.bio) {
+        formData.append('bio', values.bio);
+        console.log('  - bio:', values.bio);
+      }
+      
+      if (selectedFile) {
+        formData.append('profilePicture', selectedFile);
+        console.log('  - profilePicture:', selectedFile.name);
+      }
+      
+      console.log('Calling update profile API...');
+      const response = await updateMyProfile(formData);
+      console.log('Profile updated:', response);
+      
       message.success('Profile updated successfully!');
-    }, 1000);
+      
+      // Refresh profile data
+      await fetchUserProfile();
+      setSelectedFile(null);
+    } catch (error) {
+      console.error('=== PROFILE UPDATE ERROR ===');
+      console.error('Error:', error);
+      
+      // Show field-specific errors
+      if (error.fieldErrors) {
+        Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
+          console.error(`  - ${field}: ${errorMsg}`);
+          message.error(`${field}: ${errorMsg}`);
+        });
+      } else {
+        message.error(error.message || 'Failed to update profile');
+      }
+    } finally {
+      setProfileLoading(false);
+      console.log('=== PROFILE UPDATE COMPLETE ===');
+    }
   };
 
   const handlePasswordUpdate = async (values) => {
     setPasswordLoading(true);
-    console.log('Password update values:', {
-      currentPassword: values.currentPassword,
-      newPassword: values.newPassword
-    });
+    console.log('=== PASSWORD CHANGE ===');
     
-    setTimeout(() => {
-      setPasswordLoading(false);
+    try {
+      await changePassword(values.currentPassword, values.newPassword);
+      
       message.success('Password updated successfully!');
       passwordForm.resetFields();
-    }, 1000);
+    } catch (error) {
+      console.error('=== PASSWORD CHANGE ERROR ===');
+      console.error('Error:', error);
+      
+      // Show field-specific errors
+      if (error.fieldErrors) {
+        Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
+          console.error(`  - ${field}: ${errorMsg}`);
+          message.error(`${field}: ${errorMsg}`);
+        });
+      } else if (error.status === 401) {
+        message.error('Old password is incorrect');
+      } else {
+        message.error(error.message || 'Failed to change password');
+      }
+    } finally {
+      setPasswordLoading(false);
+      console.log('=== PASSWORD CHANGE COMPLETE ===');
+    }
   };
 
   const handleProfileCancel = () => {
@@ -205,8 +257,9 @@ const Profile = () => {
         return false;
       }
 
-      message.success('Profile picture uploaded successfully!');
-      return false;
+      setSelectedFile(file);
+      message.success('Profile picture selected. Click "Save Changes" to upload.');
+      return false; // Prevent auto upload
     },
     showUploadList: false,
   };
@@ -323,6 +376,11 @@ const Profile = () => {
                         </UploadButton>
                       </Upload>
                       <UploadHint>Upload a new avatar. Max file size: 2MB. (PNG, JPG, GIF)</UploadHint>
+                      {selectedFile && (
+                        <UploadHint style={{ color: '#52c41a', marginTop: '4px' }}>
+                          Selected: {selectedFile.name}
+                        </UploadHint>
+                      )}
                     </div>
                   </AvatarSection>
                 </FormGroup>
@@ -410,11 +468,15 @@ const Profile = () => {
                   name="newPassword"
                   rules={[
                     { required: true, message: 'Please input your new password!' },
-                    { min: 6, message: 'Password must be at least 6 characters!' }
+                    { min: 8, message: 'Password must be at least 8 characters!' },
+                    {
+                      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+                      message: 'Password must contain uppercase, lowercase, number, and special character!',
+                    },
                   ]}
                 >
                   <PasswordInput
-                    placeholder="Enter new password"
+                    placeholder="Min 8 chars with uppercase, lowercase, number & special char"
                     disabled={passwordLoading}
                   />
                 </Form.Item>

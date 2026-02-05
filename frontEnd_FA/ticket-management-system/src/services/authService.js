@@ -178,6 +178,144 @@ export const getCurrentUser = () => {
 };
 
 /**
+ * Get my profile (current user)
+ * @returns {Promise} User profile data
+ */
+export const getMyProfile = async () => {
+  try {
+    console.log('Fetching my profile...');
+    const response = await fetch(`${API_BASE_URL}/profile/me`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to fetch profile',
+        data
+      };
+    }
+
+    console.log('My profile fetched:', data);
+    return data;
+  } catch (error) {
+    console.error('Get my profile error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update my profile (current user)
+ * @param {FormData} formData - Profile data (username, bio, profilePicture)
+ * @returns {Promise} Updated profile data
+ */
+export const updateMyProfile = async (formData) => {
+  try {
+    console.log('Updating my profile...');
+    const token = localStorage.getItem('token');
+    
+    const response = await fetch(`${API_BASE_URL}/profile`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type - browser will set it with boundary for FormData
+      },
+      body: formData,
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to update profile',
+        fieldErrors: data.fieldErrors || null,
+        data
+      };
+    }
+
+    console.log('Profile updated successfully:', data);
+    
+    // Update localStorage with new username if changed
+    if (data.username) {
+      localStorage.setItem('username', data.username);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Update profile error:', error);
+    throw error;
+  }
+};
+
+/**
+ * Change password (current user)
+ * @param {string} oldPassword - Current password
+ * @param {string} newPassword - New password
+ * @returns {Promise} Success response
+ */
+export const changePassword = async (oldPassword, newPassword) => {
+  try {
+    console.log('Changing password...');
+    const response = await fetch(`${API_BASE_URL}/profile/password`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ oldPassword, newPassword }),
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to change password',
+        fieldErrors: data.fieldErrors || null,
+        data
+      };
+    }
+
+    console.log('Password changed successfully');
+    return data;
+  } catch (error) {
+    console.error('Change password error:', error);
+    throw error;
+  }
+};
+
+/**
  * Get all users (Admin only)
  * @returns {Promise} Array of users
  */
