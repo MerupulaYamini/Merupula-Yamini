@@ -25,10 +25,13 @@ export const BackButton = styled(Button)`
   display: flex;
   align-items: center;
   gap: 8px;
+  border: 1.5px solid #d9d9d9;
+  transition: all 0.2s ease;
   
   &:hover {
     color: #1890ff;
     border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
 `;
 
@@ -59,29 +62,33 @@ export const ActionButtons = styled.div`
 
 export const EditButton = styled(Button)`
   background-color: #1890ff;
-  border-color: #1890ff;
+  border: 1.5px solid #1890ff;
   color: white;
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: all 0.2s ease;
   
   &:hover {
     background-color: #40a9ff;
     border-color: #40a9ff;
+    box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
   }
 `;
 
 export const DeleteButton = styled(Button)`
   background-color: #ff4d4f;
-  border-color: #ff4d4f;
+  border: 1.5px solid #ff4d4f;
   color: white;
   display: flex;
   align-items: center;
   gap: 8px;
+  transition: all 0.2s ease;
   
   &:hover {
     background-color: #ff7875;
     border-color: #ff7875;
+    box-shadow: 0 2px 4px rgba(255, 77, 79, 0.2);
   }
 `;
 
@@ -118,19 +125,31 @@ export const RightColumn = styled.div`
 export const InfoSection = styled.div`
   width: 100%;
   background: #FFFFFF;
-  border-radius: 4px;
-  border: 1px solid #DCE0E5;
+  border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
 `;
 
 export const UpdateStatusSection = styled.div`
   width: 100%;
   background: #FFFFFF;
-  border-radius: 4px;
-  border: 1px solid #DCE0E5;
+  border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
 `;
 
 export const UpdateStatusTitle = styled.h3`
@@ -151,12 +170,13 @@ export const StatusSelectLabel = styled.label`
 export const StatusSelect = styled.select`
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #d9d9d9;
+  border: 1.5px solid #d9d9d9;
   border-radius: 6px;
   background: white;
   color: #262626;
   font-size: 14px;
   margin-bottom: 16px;
+  transition: all 0.2s ease;
   
   &:hover {
     border-color: #40a9ff;
@@ -165,7 +185,7 @@ export const StatusSelect = styled.select`
   &:focus {
     outline: none;
     border-color: #1890ff;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
 `;
 
@@ -189,10 +209,16 @@ export const StatusHistorySection = styled.div`
   height: 330px;
   background: #FFFFFF;
   border-radius: 8px;
-  border: 1px solid #DCE0E5;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
   overflow-y: auto;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
 `;
 
 export const StatusHistoryTitle = styled.h3`
@@ -345,11 +371,17 @@ export const UserName = styled.span`
 export const DescriptionSection = styled.div`
   width: 100%;
   background: #FFFFFF;
-  border-radius: 4px;
-  border: 1px solid #DCE0E5;
+  border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
   min-width: 0; /* Prevents overflow */
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
 `;
 
 export const TicketTitleSection = styled.div`
@@ -485,11 +517,17 @@ export const AttachmentSize = styled.div`
 export const CommentsSection = styled.div`
   width: 100%;
   background: #FFFFFF;
-  border-radius: 4px;
-  border: 1px solid #DCE0E5;
+  border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
   min-width: 0; /* Prevents overflow */
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
 `;
 
 export const CommentsSectionTitle = styled.h3`

@@ -12,11 +12,17 @@ export const CreateTicketContainer = styled.div`
 export const CreateTicketCard = styled.div`
   background: #FFFFFF;
   border-radius: 8px;
-  border: 1px solid #DCE0E5;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
   padding: 40px;
   width: 100%;
   height: 100%;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
 `;
 
 export const CreateTicketTitle = styled.h1`
@@ -77,8 +83,9 @@ export const FormLabel = styled.label`
 export const StyledInput = styled(Input)`
   padding: 12px 16px;
   border-radius: 6px;
-  border: 1px solid #d9d9d9;
+  border: 1.5px solid #d9d9d9;
   font-size: 14px;
+  transition: all 0.2s ease;
   
   &:hover {
     border-color: #40a9ff;
@@ -86,7 +93,7 @@ export const StyledInput = styled(Input)`
   
   &:focus {
     border-color: #1890ff;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
   
   &::placeholder {
@@ -97,9 +104,10 @@ export const StyledInput = styled(Input)`
 export const StyledTextArea = styled(Input.TextArea)`
   padding: 12px 16px;
   border-radius: 6px;
-  border: 1px solid #d9d9d9;
+  border: 1.5px solid #d9d9d9;
   font-size: 14px;
   resize: vertical;
+  transition: all 0.2s ease;
   
   &:hover {
     border-color: #40a9ff;
@@ -107,7 +115,7 @@ export const StyledTextArea = styled(Input.TextArea)`
   
   &:focus {
     border-color: #1890ff;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
   
   &::placeholder {
@@ -119,8 +127,9 @@ export const StyledSelect = styled(Select)`
   .ant-select-selector {
     padding: 8px 12px !important;
     border-radius: 6px !important;
-    border: 1px solid #d9d9d9 !important;
+    border: 1.5px solid #d9d9d9 !important;
     height: 48px !important;
+    transition: all 0.2s ease !important;
     
     &:hover {
       border-color: #40a9ff !important;
@@ -129,7 +138,7 @@ export const StyledSelect = styled(Select)`
   
   &.ant-select-focused .ant-select-selector {
     border-color: #1890ff !important;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1) !important;
   }
   
   .ant-select-selection-placeholder {
@@ -170,9 +179,10 @@ export const AttachmentSection = styled.div`
 export const AttachmentInput = styled(Input)`
   padding: 12px 16px;
   border-radius: 6px;
-  border: 1px solid #d9d9d9;
+  border: 1.5px solid #d9d9d9;
   font-size: 14px;
   margin-bottom: 16px;
+  transition: all 0.2s ease;
   
   &:hover {
     border-color: #40a9ff;
@@ -180,7 +190,7 @@ export const AttachmentInput = styled(Input)`
   
   &:focus {
     border-color: #1890ff;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
   
   &::placeholder {
@@ -225,12 +235,15 @@ export const CancelButton = styled(Button)`
   padding: 8px 24px;
   height: 40px;
   border-radius: 6px;
+  border: 1.5px solid #d9d9d9;
   font-size: 14px;
   font-weight: 500;
+  transition: all 0.2s ease;
   
   &:hover {
     color: #1890ff;
     border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
 `;
 
@@ -238,19 +251,22 @@ export const CreateButton = styled(Button)`
   padding: 8px 24px;
   height: 40px;
   background-color: #1890ff;
-  border-color: #1890ff;
+  border: 1.5px solid #1890ff;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
+  transition: all 0.2s ease;
   
   &:hover {
     background-color: #40a9ff;
     border-color: #40a9ff;
+    box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
   }
   
   &:focus {
     background-color: #40a9ff;
     border-color: #40a9ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
 `;
 

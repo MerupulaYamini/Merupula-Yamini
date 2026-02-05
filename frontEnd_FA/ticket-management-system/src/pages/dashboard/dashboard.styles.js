@@ -93,8 +93,13 @@ export const PendingCard = styled(Card)`
   height: 326px;
   background: #FFFFFF;
   border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08), 0px 0px 0px rgba(23, 26, 31, 0);
-  border: none;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
   
   .ant-card-head {
     border-bottom: 2px solid #1890ff;
@@ -243,6 +248,18 @@ export const TicketFilters = styled.div`
 
 export const SearchInput = styled(Input)`
   width: 250px;
+  border: 1.5px solid #d9d9d9;
+  border-radius: 6px;
+  
+  &:hover {
+    border-color: #40a9ff;
+  }
+  
+  &:focus,
+  &:focus-within {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  }
   
   @media (max-width: 768px) {
     width: 100%;
@@ -251,7 +268,7 @@ export const SearchInput = styled(Input)`
 
 export const FilterSelect = styled.select`
   padding: 8px 12px;
-  border: 1px solid #d9d9d9;
+  border: 1.5px solid #d9d9d9;
   border-radius: 6px;
   background: white;
   color: #262626;
@@ -265,22 +282,28 @@ export const FilterSelect = styled.select`
   &:focus {
     outline: none;
     border-color: #1890ff;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
 `;
 
 export const TicketTable = styled.div`
   background: white;
   border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
 `;
 
 export const TableHeader = styled.div`
   display: grid;
   grid-template-columns: 100px 2fr 120px 120px 150px 120px 100px;
   background: #fafafa;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 2px solid #e8e8e8;
   padding: 16px;
   font-weight: 600;
   color: #8c8c8c;
@@ -301,11 +324,14 @@ export const TableRow = styled.div`
   display: grid;
   grid-template-columns: 100px 2fr 120px 120px 150px 120px 100px;
   padding: 16px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #e8e8e8;
   align-items: center;
+  transition: all 0.2s ease;
   
   &:hover {
-    background-color: #fafafa;
+    background-color: #f8f9fa;
+    border-left: 3px solid #1890ff;
+    padding-left: 13px;
   }
   
   &:last-child {

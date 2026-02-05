@@ -13,11 +13,18 @@ export const AuthPageWrapper = styled.div`
 export const AuthCard = styled.div`
   background: white;
   border-radius: 8px;
+  border: 1.5px solid #d9d9d9;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   padding: 40px;
   width: 100%;
   max-width: 400px;
   text-align: center;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 6px 16px rgba(24, 144, 255, 0.15);
+  }
 
   @media (max-width: 768px) {
     padding: 30px 20px;
@@ -58,8 +65,9 @@ export const StyledForm = styled(Form)`
   .ant-input-affix-wrapper {
     padding: 12px 16px;
     border-radius: 6px;
-    border: 1px solid #d9d9d9;
+    border: 1.5px solid #d9d9d9;
     height: 48px;
+    transition: all 0.2s ease;
     
     &:hover {
       border-color: #40a9ff;
@@ -67,7 +75,7 @@ export const StyledForm = styled(Form)`
     
     &:focus-within {
       border-color: #1890ff;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
     }
   }
 
@@ -99,19 +107,22 @@ export const SignInButton = styled(Button)`
   width: 100%;
   height: 48px;
   background-color: #1890ff;
-  border-color: #1890ff;
+  border: 1.5px solid #1890ff;
   border-radius: 6px;
   font-size: 16px;
   font-weight: 500;
+  transition: all 0.2s ease;
   
   &:hover {
     background-color: #40a9ff;
     border-color: #40a9ff;
+    box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
   }
   
   &:focus {
     background-color: #40a9ff;
     border-color: #40a9ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
 `;
 
@@ -154,13 +165,19 @@ export const CreateAccountLink = styled.a`
 // Register Page Components
 export const AlertBox = styled.div`
   background-color: #e6f7ff;
-  border: 1px solid #91d5ff;
+  border: 1.5px solid #91d5ff;
   border-radius: 6px;
   padding: 16px;
   margin-bottom: 24px;
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+  }
 
   .ant-typography {
     margin: 0;
