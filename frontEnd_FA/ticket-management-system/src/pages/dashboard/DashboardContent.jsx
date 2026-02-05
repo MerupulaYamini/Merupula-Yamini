@@ -9,7 +9,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getAllTickets, deleteTicket, mapStatus, mapLabel } from '../../services/ticketService';
-import { getAllUsers, updateUserStatus, deleteUser } from '../../services/authService';
+import { getAllUsers, updateUserStatus, deleteUser, getCurrentUser } from '../../services/authService';
 import {
   PageTitle,
   PageSubtitle,
@@ -68,6 +68,13 @@ const DashboardContent = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
+  // Check if current user is admin
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
+  
+  console.log('Current user:', currentUser);
+  console.log('Is admin:', isAdmin);
+
   // Fetch tickets from API
   const fetchTickets = async () => {
     setLoading(true);
@@ -117,7 +124,10 @@ const DashboardContent = () => {
   // Fetch tickets on component mount and when filters change
   useEffect(() => {
     fetchTickets();
-    fetchPendingUsers();
+    // Only fetch pending users if admin
+    if (isAdmin) {
+      fetchPendingUsers();
+    }
   }, [pagination.page, statusFilter, labelFilter]);
 
   // Fetch pending users
@@ -264,9 +274,11 @@ const DashboardContent = () => {
     <>
       <PageTitle>Dashboard</PageTitle>
       <PageSubtitle>
-        Welcome back, Admin User! Here's an overview of your TicketFlow system.
+        Welcome back, {isAdmin ? 'Admin' : 'Employee'}! Here's an overview of your TicketFlow system.
       </PageSubtitle>
 
+      {/* Pending Registrations - Only show for Admin */}
+      {isAdmin && (
       <PendingCard title="Pending Registrations">
         {loadingUsers ? (
           <div style={{ padding: '20px', textAlign: 'center', color: '#8c8c8c' }}>
@@ -323,18 +335,21 @@ const DashboardContent = () => {
           </PaginationButtons>
         </PaginationContainer>
       </PendingCard>
+      )}
 
       <TicketSection>
         <SectionTitle>Ticket Management</SectionTitle>
         
         <TicketHeader>
-          <CreateTicketButton 
-            type="primary" 
-            icon={<PlusCircleOutlined />}
-            onClick={handleCreateTicket}
-          >
-            Create New Ticket
-          </CreateTicketButton>
+          {isAdmin && (
+            <CreateTicketButton 
+              type="primary" 
+              icon={<PlusCircleOutlined />}
+              onClick={handleCreateTicket}
+            >
+              Create New Ticket
+            </CreateTicketButton>
+          )}
           
           <TicketFilters>
             <SearchInput
@@ -404,13 +419,15 @@ const DashboardContent = () => {
                     title="View Details"
                     disabled={loading}
                   />
-                  <DeleteButton 
-                    icon={<DeleteOutlined />}
-                    size="small"
-                    onClick={() => handleDeleteTicket(ticket.id)}
-                    title="Delete Ticket"
-                    disabled={loading}
-                  />
+                  {isAdmin && (
+                    <DeleteButton 
+                      icon={<DeleteOutlined />}
+                      size="small"
+                      onClick={() => handleDeleteTicket(ticket.id)}
+                      title="Delete Ticket"
+                      disabled={loading}
+                    />
+                  )}
                 </ActionMenu>
               </TableRow>
             ))

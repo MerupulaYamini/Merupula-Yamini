@@ -65,6 +65,63 @@ export const getAllTickets = async (params = {}) => {
 };
 
 /**
+ * Get tickets assigned to current user
+ * @param {Object} params - Query parameters
+ * @param {number} params.page - Page number (0-based)
+ * @param {number} params.size - Items per page (default: 10)
+ * @param {string} params.sort - Sort by field,direction (e.g., "createdAt,desc")
+ * @returns {Promise} Paginated ticket data
+ */
+export const getMyTickets = async (params = {}) => {
+  try {
+    console.log('Fetching my tickets with params:', params);
+    
+    // Build query string from params
+    const queryParams = new URLSearchParams();
+    
+    if (params.page !== undefined) queryParams.append('page', params.page);
+    if (params.size) queryParams.append('size', params.size);
+    if (params.sort) queryParams.append('sort', params.sort);
+
+    const queryString = queryParams.toString();
+    const url = `${API_BASE_URL}/tickets/my-tickets${queryString ? `?${queryString}` : ''}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('Non-JSON response:', text);
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to fetch my tickets',
+        data
+      };
+    }
+
+    console.log('My tickets fetched successfully:', data);
+    return data;
+  } catch (error) {
+    console.error('Get my tickets error:', error);
+    throw error;
+  }
+};
+
+/**
  * Get a single ticket by ID
  * @param {number} ticketId - Ticket ID
  * @returns {Promise} Ticket data

@@ -7,7 +7,7 @@ import {
   AppstoreOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { logoutUser } from '../../services/authService';
+import { logoutUser, getCurrentUser } from '../../services/authService';
 import {
   DashboardLayout,
   DashboardHeader,
@@ -23,33 +23,45 @@ const MainLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Check if current user is admin
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
+  
   // Get current page from URL path
   const getCurrentKey = () => {
     const path = location.pathname;
     if (path === '/dashboard') return 'dashboard';
     if (path === '/user-management') return 'user-management';
     if (path === '/create-ticket') return 'create-ticket';
+    if (path === '/my-tickets') return 'my-tickets';
     return 'dashboard';
   };
 
   const [selectedKey, setSelectedKey] = useState(getCurrentKey());
 
+  // Build menu items based on user role
   const menuItems = [
     {
       key: 'dashboard',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
     },
-    {
+    // Only show User Management for Admin
+    ...(isAdmin ? [{
       key: 'user-management',
       icon: <UserOutlined />,
       label: 'User Management',
-    },
-    {
+    }] : []),
+    // Show Create Ticket for Admin, View My Tickets for Employee
+    ...(isAdmin ? [{
       key: 'create-ticket',
       icon: <PlusCircleOutlined />,
       label: 'Create Ticket',
-    },
+    }] : [{
+      key: 'my-tickets',
+      icon: <AppstoreOutlined />,
+      label: 'View My Tickets',
+    }]),
   ];
 
   const handleMenuClick = (e) => {
@@ -65,6 +77,9 @@ const MainLayout = ({ children }) => {
         break;
       case 'create-ticket':
         navigate('/create-ticket');
+        break;
+      case 'my-tickets':
+        navigate('/my-tickets');
         break;
       default:
         navigate('/dashboard');

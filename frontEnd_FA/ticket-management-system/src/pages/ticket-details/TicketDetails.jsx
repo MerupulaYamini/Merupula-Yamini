@@ -18,6 +18,7 @@ import {
 } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
 import { getTicketById, deleteTicket, updateTicketStatus, addComment, mapStatus, mapLabel } from '../../services/ticketService';
+import { getCurrentUser } from '../../services/authService';
 import {
   TicketDetailsContainer,
   TicketHeader,
@@ -94,6 +95,10 @@ const TicketDetails = () => {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+  // Check if current user is admin
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
 
   // Fetch ticket details on component mount
   useEffect(() => {
@@ -501,14 +506,16 @@ const TicketDetails = () => {
             <TicketId>TKT-{String(ticket.id).padStart(3, '0')}</TicketId>
           </div>
           
-          <ActionButtons>
-            <EditButton icon={<EditOutlined />} onClick={handleEdit}>
-              Edit
-            </EditButton>
-            <DeleteButton icon={<DeleteOutlined />} onClick={handleDelete}>
-              Delete
-            </DeleteButton>
-          </ActionButtons>
+          {isAdmin && (
+            <ActionButtons>
+              <EditButton icon={<EditOutlined />} onClick={handleEdit}>
+                Edit
+              </EditButton>
+              <DeleteButton icon={<DeleteOutlined />} onClick={handleDelete}>
+                Delete
+              </DeleteButton>
+            </ActionButtons>
+          )}
         </TicketHeader>
 
         <TicketContent>
