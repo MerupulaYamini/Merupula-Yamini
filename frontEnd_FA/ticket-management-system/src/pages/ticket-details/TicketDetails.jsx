@@ -8,7 +8,13 @@ import {
   FileTextOutlined,
   VideoCameraOutlined,
   PaperClipOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  BoldOutlined,
+  ItalicOutlined,
+  UnderlineOutlined,
+  OrderedListOutlined,
+  UnorderedListOutlined,
+  LinkOutlined
 } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
 import {
@@ -21,6 +27,8 @@ import {
   EditButton,
   DeleteButton,
   TicketContent,
+  LeftColumn,
+  RightColumn,
   InfoSection,
   InfoRow,
   InfoLabel,
@@ -57,7 +65,23 @@ import {
   StatusHistoryDot,
   StatusHistoryContent,
   StatusHistoryText,
-  StatusHistoryTime
+  StatusHistoryTime,
+  CommentsSection,
+  CommentsSectionTitle,
+  CommentsTimeline,
+  CommentItem,
+  CommentHeader,
+  CommentAuthor,
+  AuthorName,
+  OnlineIndicator,
+  CommentTimestamp,
+  CommentContent,
+  CommentForm,
+  RichTextToolbar,
+  ToolbarButton,
+  CommentTextArea,
+  CommentActions,
+  AddCommentButton
 } from './ticket-details.styles';
 
 const TicketDetails = () => {
@@ -66,6 +90,13 @@ const TicketDetails = () => {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('');
+  const [newComment, setNewComment] = useState('');
+  const [comments, setComments] = useState([]);
+  const [activeFormats, setActiveFormats] = useState({
+    bold: false,
+    italic: false,
+    underline: false
+  });
 
   // Mock ticket data - in real app, this would come from API
   const mockTickets = {
@@ -121,6 +152,29 @@ const TicketDetails = () => {
           action: 'Status changed to "PR Review" by John Smith',
           timestamp: '2023-10-28 02:15 PM'
         }
+      ],
+      comments: [
+        {
+          id: 1,
+          author: 'Alice Johnson',
+          content: 'Initial wireframes for the user profile screen have been completed. Please find them attached. Seeking feedback on the layout and functionality of the password change section.',
+          timestamp: '2023-10-26 10:40 AM',
+          isOnline: true
+        },
+        {
+          id: 2,
+          author: 'Admin User',
+          content: 'Great, I\'ll review the wireframes and get back to you with feedback by end of day.',
+          timestamp: '2023-10-27 09:30 AM',
+          isOnline: false
+        },
+        {
+          id: 3,
+          author: 'Admin User',
+          content: 'Looks good so far. Ensure password validation rules are clearly communicated to the user.',
+          timestamp: '2023-10-28 02:15 PM',
+          isOnline: false
+        }
       ]
     },
     'TKT-002': {
@@ -149,6 +203,22 @@ const TicketDetails = () => {
           id: 2,
           action: 'Assigned to Bob Williams by Admin User',
           timestamp: '2024-02-03 08:30 AM'
+        }
+      ],
+      comments: [
+        {
+          id: 1,
+          author: 'Alice Johnson',
+          content: 'I\'ve noticed this issue occurring during peak hours. The connection pool might be exhausted.',
+          timestamp: '2024-02-03 09:15 AM',
+          isOnline: true
+        },
+        {
+          id: 2,
+          author: 'Bob Williams',
+          content: 'I\'ll investigate the connection pool settings and monitor the database performance.',
+          timestamp: '2024-02-03 11:30 AM',
+          isOnline: false
         }
       ]
     },
@@ -183,6 +253,15 @@ const TicketDetails = () => {
           id: 3,
           action: 'Status changed to "Review" by Charlie Brown',
           timestamp: '2024-02-05 04:15 PM'
+        }
+      ],
+      comments: [
+        {
+          id: 1,
+          author: 'Charlie Brown',
+          content: 'Started breaking down the component into smaller pieces. The main areas to focus on are:\n• State management\n• Event handlers\n• UI rendering logic',
+          timestamp: '2024-02-02 03:45 PM',
+          isOnline: true
         }
       ]
     },
@@ -223,6 +302,15 @@ const TicketDetails = () => {
           action: 'Status changed to "Ready To Deploy" by Alice Johnson',
           timestamp: '2024-02-04 03:30 PM'
         }
+      ],
+      comments: [
+        {
+          id: 1,
+          author: 'Alice Johnson',
+          content: 'File upload functionality has been implemented and tested. Ready for deployment to staging environment.',
+          timestamp: '2024-02-04 03:45 PM',
+          isOnline: true
+        }
       ]
     }
   };
@@ -234,6 +322,7 @@ const TicketDetails = () => {
       setTicket(foundTicket);
       if (foundTicket) {
         setSelectedStatus(foundTicket.status);
+        setComments(foundTicket.comments || []);
       }
       setLoading(false);
     }, 500);
@@ -282,6 +371,54 @@ const TicketDetails = () => {
   const handleAttachmentClick = (attachment) => {
     message.info(`Opening ${attachment.name}...`);
     // In real app, this would open/download the file
+  };
+
+  const handleAddComment = () => {
+    if (!newComment.trim()) {
+      message.warning('Please enter a comment');
+      return;
+    }
+
+    const comment = {
+      id: comments.length + 1,
+      author: 'Current User', // In real app, this would come from auth context
+      content: newComment,
+      timestamp: new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }),
+      isOnline: true
+    };
+
+    setComments([comment, ...comments]); // Add to top for latest first
+    setNewComment('');
+    message.success('Comment added successfully');
+  };
+
+  const handleCommentChange = (e) => {
+    setNewComment(e.target.value);
+  };
+
+  const handleFormatToggle = (format) => {
+    setActiveFormats(prev => ({
+      ...prev,
+      [format]: !prev[format]
+    }));
+    // In a real implementation, this would apply formatting to selected text
+  };
+
+  const insertList = (type) => {
+    const listText = type === 'ordered' ? '1. List item\n2. List item' : '• List item\n• List item';
+    setNewComment(prev => prev + (prev ? '\n' : '') + listText);
+  };
+
+  const insertLink = () => {
+    const linkText = '[Link text](https://example.com)';
+    setNewComment(prev => prev + linkText);
   };
 
   if (loading) {
@@ -333,7 +470,7 @@ const TicketDetails = () => {
         </TicketHeader>
 
         <TicketContent>
-          <div>
+          <LeftColumn>
             <InfoSection>
               <InfoRow>
                 <InfoLabel>Status:</InfoLabel>
@@ -424,45 +561,138 @@ const TicketDetails = () => {
                 ))}
               </StatusHistoryList>
             </StatusHistorySection>
-          </div>
+          </LeftColumn>
 
-          <DescriptionSection>
-            <TicketTitleSection>
-              <TicketTitleDisplay>{ticket.ticketTitle}</TicketTitleDisplay>
-            </TicketTitleSection>
-            
-            <SectionTitle>Description</SectionTitle>
-            <DescriptionText>{ticket.description}</DescriptionText>
-            
-            {ticket.attachments && ticket.attachments.length > 0 && (
-              <AttachmentsSection>
-                <AttachmentsTitle>Attachments</AttachmentsTitle>
-                <AttachmentsContainer>
-                  <AttachmentPreview>
-                    <VideoCameraOutlined className="preview-icon" />
-                    <div className="preview-text">Profile Screen Mockup Video</div>
-                  </AttachmentPreview>
-                  
-                  <AttachmentsList>
-                    {ticket.attachments.map((attachment) => (
-                      <AttachmentItem 
-                        key={attachment.id}
-                        onClick={() => handleAttachmentClick(attachment)}
-                      >
-                        <AttachmentIcon>
-                          {getAttachmentIcon(attachment.type)}
-                        </AttachmentIcon>
-                        <AttachmentInfo>
-                          <AttachmentName>{attachment.name}</AttachmentName>
-                          <AttachmentSize>{attachment.size}</AttachmentSize>
-                        </AttachmentInfo>
-                      </AttachmentItem>
-                    ))}
-                  </AttachmentsList>
-                </AttachmentsContainer>
-              </AttachmentsSection>
-            )}
-          </DescriptionSection>
+          <RightColumn>
+            <DescriptionSection>
+              <TicketTitleSection>
+                <TicketTitleDisplay>{ticket.ticketTitle}</TicketTitleDisplay>
+              </TicketTitleSection>
+              
+              <SectionTitle>Description</SectionTitle>
+              <DescriptionText>{ticket.description}</DescriptionText>
+              
+              {ticket.attachments && ticket.attachments.length > 0 && (
+                <AttachmentsSection>
+                  <AttachmentsTitle>Attachments</AttachmentsTitle>
+                  <AttachmentsContainer>
+                    <AttachmentPreview>
+                      <VideoCameraOutlined className="preview-icon" />
+                      <div className="preview-text">Profile Screen Mockup Video</div>
+                    </AttachmentPreview>
+                    
+                    <AttachmentsList>
+                      {ticket.attachments.map((attachment) => (
+                        <AttachmentItem 
+                          key={attachment.id}
+                          onClick={() => handleAttachmentClick(attachment)}
+                        >
+                          <AttachmentIcon>
+                            {getAttachmentIcon(attachment.type)}
+                          </AttachmentIcon>
+                          <AttachmentInfo>
+                            <AttachmentName>{attachment.name}</AttachmentName>
+                            <AttachmentSize>{attachment.size}</AttachmentSize>
+                          </AttachmentInfo>
+                        </AttachmentItem>
+                      ))}
+                    </AttachmentsList>
+                  </AttachmentsContainer>
+                </AttachmentsSection>
+              )}
+            </DescriptionSection>
+
+            <CommentsSection>
+              <CommentsSectionTitle>Comments</CommentsSectionTitle>
+              
+              <CommentsTimeline>
+                {comments.map((comment, index) => (
+                  <CommentItem key={comment.id} className={index === 0 ? 'highlighted' : ''}>
+                    <CommentHeader>
+                      <CommentAuthor>
+                        <AuthorName>{comment.author}</AuthorName>
+                        {comment.isOnline && <OnlineIndicator />}
+                      </CommentAuthor>
+                      <CommentTimestamp>{comment.timestamp}</CommentTimestamp>
+                    </CommentHeader>
+                    <CommentContent>
+                      {comment.content.split('\n').map((line, lineIndex) => (
+                        <div key={lineIndex}>
+                          {line.startsWith('•') ? (
+                            <ul><li>{line.substring(1).trim()}</li></ul>
+                          ) : line.match(/^\d+\./) ? (
+                            <ol><li>{line.replace(/^\d+\.\s*/, '')}</li></ol>
+                          ) : (
+                            line
+                          )}
+                        </div>
+                      ))}
+                    </CommentContent>
+                  </CommentItem>
+                ))}
+              </CommentsTimeline>
+
+              <CommentForm>
+                <RichTextToolbar>
+                  <ToolbarButton
+                    className={activeFormats.bold ? 'active' : ''}
+                    onClick={() => handleFormatToggle('bold')}
+                    title="Bold"
+                  >
+                    <BoldOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton
+                    className={activeFormats.italic ? 'active' : ''}
+                    onClick={() => handleFormatToggle('italic')}
+                    title="Italic"
+                  >
+                    <ItalicOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton
+                    className={activeFormats.underline ? 'active' : ''}
+                    onClick={() => handleFormatToggle('underline')}
+                    title="Underline"
+                  >
+                    <UnderlineOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton
+                    onClick={() => insertList('unordered')}
+                    title="Bullet List"
+                  >
+                    <UnorderedListOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton
+                    onClick={() => insertList('ordered')}
+                    title="Numbered List"
+                  >
+                    <OrderedListOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton
+                    onClick={insertLink}
+                    title="Insert Link"
+                  >
+                    <LinkOutlined />
+                  </ToolbarButton>
+                </RichTextToolbar>
+                
+                <CommentTextArea
+                  value={newComment}
+                  onChange={handleCommentChange}
+                  placeholder="Add your rich-text comment here..."
+                  rows={4}
+                />
+                
+                <CommentActions>
+                  <AddCommentButton 
+                    onClick={handleAddComment}
+                    disabled={!newComment.trim()}
+                  >
+                    Add Comment
+                  </AddCommentButton>
+                </CommentActions>
+              </CommentForm>
+            </CommentsSection>
+          </RightColumn>
         </TicketContent>
       </TicketDetailsContainer>
     </MainLayout>

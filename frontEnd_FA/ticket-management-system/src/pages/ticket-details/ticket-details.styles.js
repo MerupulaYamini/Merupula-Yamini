@@ -87,8 +87,14 @@ export const DeleteButton = styled(Button)`
 
 export const TicketContent = styled.div`
   display: grid;
-  grid-template-columns: 1fr 2fr;
+  grid-template-columns: 400px 1fr;
   gap: 32px;
+  max-width: 100%;
+  
+  @media (max-width: 1200px) {
+    grid-template-columns: 350px 1fr;
+    gap: 24px;
+  }
   
   @media (max-width: 968px) {
     grid-template-columns: 1fr;
@@ -96,25 +102,35 @@ export const TicketContent = styled.div`
   }
 `;
 
+export const LeftColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+export const RightColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0; /* Prevents overflow */
+`;
+
 export const InfoSection = styled.div`
-  width: 344px;
-  height: 226px;
+  width: 100%;
   background: #FFFFFF;
   border-radius: 4px;
   border: 1px solid #DCE0E5;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
-  height: fit-content;
 `;
 
 export const UpdateStatusSection = styled.div`
-  width: 344px;
+  width: 100%;
   background: #FFFFFF;
   border-radius: 4px;
   border: 1px solid #DCE0E5;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
-  margin-top: 16px;
 `;
 
 export const UpdateStatusTitle = styled.h3`
@@ -169,14 +185,13 @@ export const UpdateStatusButton = styled(Button)`
 `;
 
 export const StatusHistorySection = styled.div`
-  width: 386px;
+  width: 100%;
   height: 330px;
   background: #FFFFFF;
   border-radius: 8px;
   border: 1px solid #DCE0E5;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
-  margin-top: 16px;
   overflow-y: auto;
 `;
 
@@ -328,14 +343,13 @@ export const UserName = styled.span`
 `;
 
 export const DescriptionSection = styled.div`
-  width: 720px;
-  height: 471px;
+  width: 100%;
   background: #FFFFFF;
   border-radius: 4px;
   border: 1px solid #DCE0E5;
   box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
-  overflow-y: auto;
+  min-width: 0; /* Prevents overflow */
 `;
 
 export const TicketTitleSection = styled.div`
@@ -465,6 +479,191 @@ export const AttachmentSize = styled.div`
   color: #8c8c8c;
   font-size: 12px;
   margin-top: 2px;
+`;
+
+// Comments Section Components
+export const CommentsSection = styled.div`
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 4px;
+  border: 1px solid #DCE0E5;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
+  padding: 24px;
+  min-width: 0; /* Prevents overflow */
+`;
+
+export const CommentsSectionTitle = styled.h3`
+  color: #262626;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 24px 0;
+`;
+
+export const CommentsTimeline = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+`;
+
+export const CommentItem = styled.div`
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  position: relative;
+  
+  &.highlighted {
+    border-color: #1890ff;
+    background: #f0f8ff;
+  }
+`;
+
+export const CommentHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+`;
+
+export const CommentAuthor = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+export const AuthorName = styled.span`
+  color: #262626;
+  font-weight: 600;
+  font-size: 14px;
+`;
+
+export const OnlineIndicator = styled.div`
+  width: 8px;
+  height: 8px;
+  background-color: #52c41a;
+  border-radius: 50%;
+`;
+
+export const CommentTimestamp = styled.span`
+  color: #8c8c8c;
+  font-size: 12px;
+`;
+
+export const CommentContent = styled.div`
+  color: #595959;
+  font-size: 14px;
+  line-height: 1.6;
+  
+  strong {
+    font-weight: 600;
+    color: #262626;
+  }
+  
+  em {
+    font-style: italic;
+  }
+  
+  u {
+    text-decoration: underline;
+  }
+  
+  ul, ol {
+    margin: 8px 0;
+    padding-left: 20px;
+  }
+  
+  a {
+    color: #1890ff;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+export const CommentForm = styled.div`
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  background: white;
+`;
+
+export const RichTextToolbar = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 8px 8px 0 0;
+`;
+
+export const ToolbarButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #595959;
+  font-size: 14px;
+  font-weight: 600;
+  
+  &:hover {
+    background: #e6f7ff;
+    color: #1890ff;
+  }
+  
+  &.active {
+    background: #1890ff;
+    color: white;
+  }
+`;
+
+export const CommentTextArea = styled.textarea`
+  width: 100%;
+  min-height: 120px;
+  border: none;
+  padding: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  
+  &::placeholder {
+    color: #bfbfbf;
+  }
+`;
+
+export const CommentActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 0 0 8px 8px;
+`;
+
+export const AddCommentButton = styled(Button)`
+  background-color: #1890ff;
+  border-color: #1890ff;
+  color: white;
+  
+  &:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+  
+  &:disabled {
+    background-color: #f5f5f5;
+    border-color: #d9d9d9;
+    color: #bfbfbf;
+  }
 `;
 
 export const NotFoundMessage = styled.div`
