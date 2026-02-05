@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Avatar, message } from 'antd';
+import { Menu, message } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -7,6 +7,7 @@ import {
   AppstoreOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { logoutUser } from '../../services/authService';
 import {
   DashboardLayout,
   DashboardHeader,
@@ -70,9 +71,18 @@ const MainLayout = ({ children }) => {
     }
   };
 
-  const handleLogout = () => {
-    message.success('Logged out successfully');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      message.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if API fails, clear local storage and redirect
+      localStorage.clear();
+      message.info('Logged out');
+      navigate('/login');
+    }
   };
 
   const handleProfileClick = () => {

@@ -301,3 +301,35 @@ export const StyledTextArea = styled(Input.TextArea)`
     box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
   }
 `;
+
+
+export const ErrorAlert = styled.div`
+  background-color: #fff2f0;
+  border: 1.5px solid #ffccc7;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #ff4d4f;
+    box-shadow: 0 2px 8px rgba(255, 77, 79, 0.1);
+  }
+
+  .error-icon {
+    color: #ff4d4f;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+
+  .error-message {
+    color: #cf1322;
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+    text-align: left;
+  }
+`;
