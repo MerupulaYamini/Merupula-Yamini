@@ -141,3 +141,41 @@ export const getCurrentUser = () => {
     roles: JSON.parse(localStorage.getItem('roles') || '[]'),
   };
 };
+
+/**
+ * Get all users (Admin only)
+ * @returns {Promise} Array of users
+ */
+export const getAllUsers = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to fetch users',
+        data
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Get users error:', error);
+    throw error;
+  }
+};

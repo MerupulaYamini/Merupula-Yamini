@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { message } from 'antd';
 import MainLayout from '../../components/layout/MainLayout';
 import { getTicketById, updateTicket } from '../../services/ticketService';
+import { getAllUsers } from '../../services/authService';
 import {
   EditTicketContainer,
   EditTicketCard,
@@ -24,6 +25,7 @@ const EditTicket = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [ticket, setTicket] = useState(null);
+  const [users, setUsers] = useState([]);
   
   // Form fields
   const [title, setTitle] = useState('');
@@ -32,22 +34,35 @@ const EditTicket = () => {
   const [assignedToUserId, setAssignedToUserId] = useState('');
 
   useEffect(() => {
-    fetchTicket();
+    fetchData();
   }, [ticketId]);
 
-  const fetchTicket = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await getTicketById(ticketId);
-      setTicket(data);
+      console.log('Fetching ticket and users...');
+      // Fetch ticket and users in parallel
+      const [ticketData, usersData] = await Promise.all([
+        getTicketById(ticketId),
+        getAllUsers()
+      ]);
+      
+      console.log('Ticket data:', ticketData);
+      console.log('Users data:', usersData);
+      
+      setTicket(ticketData);
+      setUsers(usersData);
+      
       // Pre-fill form
-      setTitle(data.title || '');
-      setDescription(data.description || '');
-      setLabel(data.label || '');
-      setAssignedToUserId(data.assignedToId ? String(data.assignedToId) : '');
+      setTitle(ticketData.title || '');
+      setDescription(ticketData.description || '');
+      setLabel(ticketData.label || '');
+      setAssignedToUserId(ticketData.assignedToId ? String(ticketData.assignedToId) : '');
+      
+      console.log('Users state set to:', usersData);
     } catch (error) {
-      console.error('Failed to fetch ticket:', error);
-      message.error(error.message || 'Failed to load ticket');
+      console.error('Failed to fetch data:', error);
+      message.error(error.message || 'Failed to load data');
     } finally {
       setLoading(false);
     }
@@ -152,6 +167,9 @@ const EditTicket = () => {
     );
   }
 
+  console.log('Rendering with users:', users);
+  console.log('Users array length:', users.length);
+
   return (
     <MainLayout>
       <EditTicketContainer>
@@ -227,23 +245,29 @@ const EditTicket = () => {
             </FormSection>
 
             <FormSection>
-              <FormLabel>Assigned To (User ID)</FormLabel>
-              <input
-                type="number"
+              <FormLabel>Assigned To</FormLabel>
+              <select
                 value={assignedToUserId}
                 onChange={(e) => setAssignedToUserId(e.target.value)}
-                placeholder="Enter user ID to assign"
                 disabled={saving}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
                   borderRadius: '6px',
                   border: '1.5px solid #d9d9d9',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  backgroundColor: 'white'
                 }}
-              />
+              >
+                <option value="">Select a user</option>
+                {users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.username} ({user.email})
+                  </option>
+                ))}
+              </select>
               <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
-                Currently assigned to: {ticket.assignedToName || 'Unassigned'} (ID: {ticket.assignedToId || 'N/A'})
+                Currently assigned to: {ticket.assignedToName || 'Unassigned'}
               </div>
             </FormSection>
 
