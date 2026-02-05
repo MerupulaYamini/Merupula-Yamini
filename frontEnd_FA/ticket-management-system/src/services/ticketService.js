@@ -104,21 +104,113 @@ export const getTicketById = async (ticketId) => {
 };
 
 /**
- * Create a new ticket
+ * Create a new ticket with multipart/form-data
  * @param {Object} ticketData - Ticket data
+ * @param {string} ticketData.title - Required, max 150 characters
+ * @param {string} ticketData.description - Required
+ * @param {string} ticketData.label - Required (BUG, FEATURE, TASK, IMPROVEMENT, SUPPORT)
+ * @param {number} ticketData.assignedToUserId - Required, valid user ID
+ * @param {File[]} ticketData.attachments - Optional, max 10MB per file
+ * @param {string[]} ticketData.attachmentUrls - Optional, external URLs
  * @returns {Promise} Created ticket data
  */
 export const createTicket = async (ticketData) => {
+  console.log('=== CREATE TICKET SERVICE ===');
+  console.log('Input data:', ticketData);
+  
   try {
-    const response = await fetch(`${API_BASE_URL}/tickets`, {
+    // Create FormData for multipart/form-data
+    console.log('1. Creating FormData...');
+    const formData = new FormData();
+    
+    // Add required fields
+    console.log('2. Adding required fields to FormData...');
+    formData.append('title', ticketData.title);
+    console.log('   - Added title:', ticketData.title);
+    
+    formData.append('description', ticketData.description);
+    console.log('   - Added description (length):', ticketData.description.length);
+    
+    formData.append('label', ticketData.label);
+    console.log('   - Added label:', ticketData.label);
+    
+    formData.append('assignedToUserId', ticketData.assignedToUserId);
+    console.log('   - Added assignedToUserId:', ticketData.assignedToUserId);
+    
+    // Add optional file attachments
+    if (ticketData.attachments && ticketData.attachments.length > 0) {
+      console.log('3. Adding file attachments...');
+      ticketData.attachments.forEach((file, index) => {
+        formData.append('attachments', file);
+        console.log(`   - Added file ${index + 1}:`, file.name, `(${file.size} bytes)`);
+      });
+    } else {
+      console.log('3. No file attachments to add');
+    }
+    
+    // Add optional attachment URLs
+    if (ticketData.attachmentUrls && ticketData.attachmentUrls.length > 0) {
+      console.log('4. Adding attachment URLs...');
+      ticketData.attachmentUrls.forEach((url, index) => {
+        formData.append('attachmentUrls', url);
+        console.log(`   - Added URL ${index + 1}:`, url);
+      });
+    } else {
+      console.log('4. No attachment URLs to add');
+    }
+
+    // Get auth token
+    const token = localStorage.getItem('token');
+    console.log('5. JWT Token:', token ? `${token.substring(0, 20)}...` : 'NOT FOUND');
+    
+    if (!token) {
+      throw {
+        status: 401,
+        message: 'No authentication token found. Please login again.'
+      };
+    }
+    
+    const url = `${API_BASE_URL}/tickets`;
+    console.log('6. Making POST request to:', url);
+    console.log('   - Method: POST');
+    console.log('   - Content-Type: multipart/form-data (set by browser)');
+    console.log('   - Authorization: Bearer token');
+    
+    const response = await fetch(url, {
       method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(ticketData),
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // NO Content-Type header - browser sets it automatically for FormData
+      },
+      body: formData,
     });
 
+    console.log('7. Response received:');
+    console.log('   - Status:', response.status);
+    console.log('   - Status Text:', response.statusText);
+    console.log('   - OK:', response.ok);
+
+    const contentType = response.headers.get('content-type');
+    console.log('   - Content-Type:', contentType);
+    
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('8. ERROR: Non-JSON response:', text);
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
     const data = await response.json();
+    console.log('8. Response data:', data);
 
     if (!response.ok) {
+      console.error('9. ERROR: Request failed');
+      console.error('   - Status:', response.status);
+      console.error('   - Message:', data.message);
+      console.error('   - Field Errors:', data.fieldErrors);
       throw {
         status: response.status,
         message: data.message || 'Failed to create ticket',
@@ -127,9 +219,11 @@ export const createTicket = async (ticketData) => {
       };
     }
 
+    console.log('9. SUCCESS: Ticket created successfully');
     return data;
   } catch (error) {
-    console.error('Create ticket error:', error);
+    console.error('=== CREATE TICKET ERROR ===');
+    console.error('Error:', error);
     throw error;
   }
 };

@@ -176,6 +176,81 @@ export const AttachmentSection = styled.div`
   margin-bottom: 32px;
 `;
 
+export const AttachmentsList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+`;
+
+export const AttachmentItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #fafafa;
+  border: 1.5px solid #d9d9d9;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #1890ff;
+    background: #f0f8ff;
+  }
+`;
+
+export const AttachmentIcon = styled.div`
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1890ff;
+`;
+
+export const AttachmentInfo = styled.div`
+  flex: 1;
+  min-width: 0;
+`;
+
+export const AttachmentName = styled.div`
+  color: #262626;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const AttachmentSize = styled.div`
+  color: #8c8c8c;
+  font-size: 12px;
+  margin-top: 2px;
+`;
+
+export const RemoveAttachmentButton = styled.button`
+  padding: 6px 12px;
+  background: transparent;
+  border: 1.5px solid #ff4d4f;
+  border-radius: 4px;
+  color: #ff4d4f;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(:disabled) {
+    background: #ff4d4f;
+    color: white;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 export const AttachmentInput = styled(Input)`
   padding: 12px 16px;
   border-radius: 6px;
