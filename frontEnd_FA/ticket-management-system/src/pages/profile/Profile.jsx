@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Input, Upload, message } from 'antd';
 import { UserOutlined, UploadOutlined } from '@ant-design/icons';
+import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
 import { getUserById, getCurrentUser } from '../../services/authService';
 import {
@@ -31,6 +32,8 @@ import {
 } from './profile.styles';
 
 const Profile = () => {
+  const { userId: urlUserId } = useParams(); // Get userId from URL if viewing another user
+  const navigate = useNavigate();
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
   const [adminPasswordForm] = Form.useForm();
@@ -38,6 +41,8 @@ const Profile = () => {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [adminPasswordLoading, setAdminPasswordLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isOwnProfile, setIsOwnProfile] = useState(true);
+  const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
 
   // User data from API
   const [userData, setUserData] = useState({
@@ -54,24 +59,37 @@ const Profile = () => {
   // Fetch user profile data
   useEffect(() => {
     fetchUserProfile();
-  }, []);
+  }, [urlUserId]);
 
   const fetchUserProfile = async () => {
     setLoading(true);
     try {
-      // Get current user ID from localStorage
+      // Get current logged-in user
       const currentUser = getCurrentUser();
-      const userId = currentUser.userId;
+      const currentUserId = currentUser.userId;
       
-      console.log('Fetching profile for user ID:', userId);
+      // Determine which user to fetch
+      const targetUserId = urlUserId || currentUserId;
       
-      if (!userId) {
+      console.log('Current user ID:', currentUserId);
+      console.log('Target user ID:', targetUserId);
+      console.log('Is own profile:', !urlUserId || urlUserId === currentUserId);
+      
+      if (!currentUserId) {
         message.error('User not logged in');
+        navigate('/login');
         return;
       }
 
+      // Check if viewing own profile
+      setIsOwnProfile(!urlUserId || urlUserId === currentUserId);
+      
+      // Check if current user is admin
+      const currentUserRoles = currentUser.roles || [];
+      setIsCurrentUserAdmin(currentUserRoles.includes('ADMIN'));
+
       // Fetch user details from API
-      const userDetails = await getUserById(userId);
+      const userDetails = await getUserById(targetUserId);
       console.log('User profile fetched:', userDetails);
       
       setUserData({
@@ -190,8 +208,14 @@ const Profile = () => {
           <ProfileContent>
           {/* Profile Information Section */}
           <ProfileSection>
-            <SectionTitle>Profile Information</SectionTitle>
-            <SectionSubtitle>Update your account's profile information and display picture.</SectionSubtitle>
+            <SectionTitle>
+              {isOwnProfile ? 'Profile Information' : `${userData.username}'s Profile`}
+            </SectionTitle>
+            <SectionSubtitle>
+              {isOwnProfile 
+                ? "Update your account's profile information and display picture."
+                : 'View user profile information.'}
+            </SectionSubtitle>
 
             <ProfileForm
               form={profileForm}
@@ -209,7 +233,7 @@ const Profile = () => {
                 >
                   <FormInput 
                     placeholder="employee.user"
-                    disabled={profileLoading}
+                    disabled={!isOwnProfile || profileLoading}
                   />
                 </Form.Item>
               </FormGroup>
@@ -224,29 +248,81 @@ const Profile = () => {
                 <UploadHint>Email cannot be changed</UploadHint>
               </FormGroup>
 
-              <FormGroup>
-                <FormLabel>Change Display Picture</FormLabel>
-                <AvatarSection>
-                  <AvatarContainer>
-                    <ProfileAvatar 
-                      size={64} 
-                      icon={<UserOutlined />}
-                      src={userData.avatar}
+              {!isOwnProfile && (
+                <>
+                  <FormGroup>
+                    <FormLabel>Status</FormLabel>
+                    <FormInput 
+                      value={userData.status}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                     />
-                  </AvatarContainer>
-                  <div>
-                    <Upload {...uploadProps}>
-                      <UploadButton 
-                        icon={<UploadOutlined />} 
-                        disabled={profileLoading}
-                      >
-                        Upload Avatar
-                      </UploadButton>
-                    </Upload>
-                    <UploadHint>Upload a new avatar. Max file size: 2MB. (PNG, JPG, GIF)</UploadHint>
-                  </div>
-                </AvatarSection>
-              </FormGroup>
+                  </FormGroup>
+
+                  <FormGroup>
+                    <FormLabel>Role</FormLabel>
+                    <FormInput 
+                      value={userData.roles && userData.roles.includes('ADMIN') ? 'Admin' : 'Employee'}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                    />
+                  </FormGroup>
+
+                  <FormGroup>
+                    <FormLabel>Member Since</FormLabel>
+                    <FormInput 
+                      value={new Date(userData.createdAt).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                    />
+                  </FormGroup>
+                </>
+              )}
+
+              {isOwnProfile && (
+                <FormGroup>
+                  <FormLabel>Change Display Picture</FormLabel>
+                  <AvatarSection>
+                    <AvatarContainer>
+                      <ProfileAvatar 
+                        size={64} 
+                        icon={<UserOutlined />}
+                        src={userData.avatar}
+                      />
+                    </AvatarContainer>
+                    <div>
+                      <Upload {...uploadProps}>
+                        <UploadButton 
+                          icon={<UploadOutlined />} 
+                          disabled={profileLoading}
+                        >
+                          Upload Avatar
+                        </UploadButton>
+                      </Upload>
+                      <UploadHint>Upload a new avatar. Max file size: 2MB. (PNG, JPG, GIF)</UploadHint>
+                    </div>
+                  </AvatarSection>
+                </FormGroup>
+              )}
+
+              {!isOwnProfile && (
+                <FormGroup>
+                  <FormLabel>Display Picture</FormLabel>
+                  <AvatarSection>
+                    <AvatarContainer>
+                      <ProfileAvatar 
+                        size={64} 
+                        icon={<UserOutlined />}
+                        src={userData.avatar}
+                      />
+                    </AvatarContainer>
+                  </AvatarSection>
+                </FormGroup>
+              )}
 
               <FormGroup>
                 <FormLabel>Bio</FormLabel>
@@ -259,29 +335,32 @@ const Profile = () => {
                   <FormTextArea
                     rows={4}
                     placeholder="Tell us about yourself..."
-                    disabled={profileLoading}
-                    showCount
+                    disabled={!isOwnProfile || profileLoading}
+                    showCount={isOwnProfile}
                     maxLength={500}
                   />
                 </Form.Item>
               </FormGroup>
 
-              <ButtonGroup>
-                <CancelButton onClick={handleProfileCancel} disabled={profileLoading}>
-                  Cancel
-                </CancelButton>
-                <PrimaryButton 
-                  type="primary" 
-                  htmlType="submit" 
-                  loading={profileLoading}
-                >
-                  Save Changes
-                </PrimaryButton>
-              </ButtonGroup>
+              {isOwnProfile && (
+                <ButtonGroup>
+                  <CancelButton onClick={handleProfileCancel} disabled={profileLoading}>
+                    Cancel
+                  </CancelButton>
+                  <PrimaryButton 
+                    type="primary" 
+                    htmlType="submit" 
+                    loading={profileLoading}
+                  >
+                    Save Changes
+                  </PrimaryButton>
+                </ButtonGroup>
+              )}
             </ProfileForm>
           </ProfileSection>
 
-          {/* Change Password Section */}
+          {/* Change Password Section - Only show for own profile */}
+          {isOwnProfile && (
           <ProfileSection>
             <SectionTitle>Change Password</SectionTitle>
             <SectionSubtitle>Update your password. Requires your current password for security.</SectionSubtitle>
@@ -360,9 +439,10 @@ const Profile = () => {
               </ButtonGroup>
             </ProfileForm>
           </ProfileSection>
+          )}
 
-          {/* Admin: Manage User Passwords Section - Only show for admin users */}
-          {userData.roles && userData.roles.includes('ADMIN') && (
+          {/* Admin: Manage User Passwords Section - Only show for admin users viewing own profile */}
+          {isOwnProfile && userData.roles && userData.roles.includes('ADMIN') && (
             <AdminSection>
               <SectionTitle>Admin: Manage User Passwords</SectionTitle>
               <SectionSubtitle>As an Admin, you can reset passwords for other users.</SectionSubtitle>

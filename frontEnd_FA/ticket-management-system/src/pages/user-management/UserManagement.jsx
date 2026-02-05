@@ -6,6 +6,7 @@ import {
   EyeOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
 import { getAllUsers, getUserById, deleteUser } from '../../services/authService';
 import {
@@ -27,6 +28,7 @@ import {
 import { StatusTag, RoleTag, UserInfoContainer, SectionDescription, PaginationFooter, PaginationInfo, PaginationControls, PaginationBtn, TitleContainer, UserManagementTable, UserTableHeader, UserTableRow } from './user-management.styles';
 
 const UserManagement = () => {
+  const navigate = useNavigate();
   // State for users
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -99,8 +101,8 @@ const UserManagement = () => {
   };
 
   const handleViewUser = (userId) => {
-    message.info(`Viewing user details for ID: ${userId}`);
-    // In a real app, this would navigate to user details page
+    console.log('Viewing user profile for ID:', userId);
+    navigate(`/profile/${userId}`);
   };
 
   const handleSearchChange = (e) => {

@@ -22,6 +22,7 @@ function App() {
         <Route path="/ticket/:ticketId" element={<TicketDetails />} />
         <Route path="/edit-ticket/:ticketId" element={<EditTicket />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userId" element={<Profile />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
