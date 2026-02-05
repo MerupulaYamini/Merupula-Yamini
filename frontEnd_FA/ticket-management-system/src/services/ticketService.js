@@ -243,3 +243,44 @@ export const mapLabelToBackend = (label) => {
   };
   return labelMap[label] || label.toUpperCase();
 };
+
+/**
+ * Update ticket status
+ * @param {number} ticketId - Ticket ID
+ * @param {string} status - New status (TODO, IN_PROGRESS, PAUSED, PR_REVIEW, READY_TO_DEPLOY, DEPLOYED_DONE)
+ * @returns {Promise} Updated ticket data
+ */
+export const updateTicketStatus = async (ticketId, status) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status }),
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to update ticket status',
+        data
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Update ticket status error:', error);
+    throw error;
+  }
+};

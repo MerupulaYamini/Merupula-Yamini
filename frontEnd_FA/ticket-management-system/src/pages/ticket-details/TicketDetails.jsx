@@ -16,7 +16,7 @@ import {
   LinkOutlined
 } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
-import { getTicketById, deleteTicket, mapStatus, mapLabel } from '../../services/ticketService';
+import { getTicketById, deleteTicket, updateTicketStatus, mapStatus, mapLabel } from '../../services/ticketService';
 import {
   TicketDetailsContainer,
   TicketHeader,
@@ -90,12 +90,7 @@ const TicketDetails = () => {
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [newComment, setNewComment] = useState('');
-  const [activeFormats, setActiveFormats] = useState({
-    bold: false,
-    italic: false,
-    underline: false
-  });
+  const [statusUpdating, setStatusUpdating] = useState(false);
 
   // Fetch ticket details on component mount
   useEffect(() => {
@@ -352,10 +347,24 @@ const TicketDetails = () => {
     }
   };
 
-  const handleStatusUpdate = () => {
-    // TODO: Implement status update API call
-    setTicket(prev => ({ ...prev, status: selectedStatus }));
-    message.success('Ticket status updated successfully');
+  const handleStatusUpdate = async () => {
+    if (!selectedStatus || selectedStatus === ticket.status) {
+      message.warning('Please select a different status');
+      return;
+    }
+
+    setStatusUpdating(true);
+    try {
+      const updatedTicket = await updateTicketStatus(ticketId, selectedStatus);
+      setTicket(updatedTicket);
+      setSelectedStatus(updatedTicket.status);
+      message.success('Ticket status updated successfully');
+    } catch (error) {
+      console.error('Update status error:', error);
+      message.error(error.message || 'Failed to update ticket status');
+    } finally {
+      setStatusUpdating(false);
+    }
   };
 
   const handleStatusChange = (e) => {
@@ -418,21 +427,15 @@ const TicketDetails = () => {
   };
 
   const handleFormatToggle = (format) => {
-    setActiveFormats(prev => ({
-      ...prev,
-      [format]: !prev[format]
-    }));
-    // In a real implementation, this would apply formatting to selected text
+    message.info('Text formatting not implemented yet');
   };
 
   const insertList = (type) => {
-    const listText = type === 'ordered' ? '1. List item\n2. List item' : '• List item\n• List item';
-    setNewComment(prev => prev + (prev ? '\n' : '') + listText);
+    message.info('List insertion not implemented yet');
   };
 
   const insertLink = () => {
-    const linkText = '[Link text](https://example.com)';
-    setNewComment(prev => prev + linkText);
+    message.info('Link insertion not implemented yet');
   };
 
   if (loading) {
@@ -551,15 +554,21 @@ const TicketDetails = () => {
               <StatusSelect 
                 value={selectedStatus} 
                 onChange={handleStatusChange}
+                disabled={statusUpdating}
               >
                 <option value="TODO">Todo</option>
                 <option value="IN_PROGRESS">In Progress</option>
                 <option value="PAUSED">Paused</option>
-                <option value="REVIEW">Review</option>
+                <option value="PR_REVIEW">PR Review</option>
+                <option value="READY_TO_DEPLOY">Ready To Deploy</option>
                 <option value="DEPLOYED_DONE">Deployed/Done</option>
               </StatusSelect>
-              <UpdateStatusButton onClick={handleStatusUpdate}>
-                Update Status
+              <UpdateStatusButton 
+                onClick={handleStatusUpdate}
+                disabled={statusUpdating || selectedStatus === ticket.status}
+                loading={statusUpdating}
+              >
+                {statusUpdating ? 'Updating...' : 'Update Status'}
               </UpdateStatusButton>
             </UpdateStatusSection>
 
@@ -651,66 +660,6 @@ const TicketDetails = () => {
                   <CommentContent>No comments yet. Be the first to comment!</CommentContent>
                 )}
               </CommentsTimeline>
-
-              <CommentForm>
-                <RichTextToolbar>
-                  <ToolbarButton
-                    className={activeFormats.bold ? 'active' : ''}
-                    onClick={() => handleFormatToggle('bold')}
-                    title="Bold"
-                  >
-                    <BoldOutlined />
-                  </ToolbarButton>
-                  <ToolbarButton
-                    className={activeFormats.italic ? 'active' : ''}
-                    onClick={() => handleFormatToggle('italic')}
-                    title="Italic"
-                  >
-                    <ItalicOutlined />
-                  </ToolbarButton>
-                  <ToolbarButton
-                    className={activeFormats.underline ? 'active' : ''}
-                    onClick={() => handleFormatToggle('underline')}
-                    title="Underline"
-                  >
-                    <UnderlineOutlined />
-                  </ToolbarButton>
-                  <ToolbarButton
-                    onClick={() => insertList('unordered')}
-                    title="Bullet List"
-                  >
-                    <UnorderedListOutlined />
-                  </ToolbarButton>
-                  <ToolbarButton
-                    onClick={() => insertList('ordered')}
-                    title="Numbered List"
-                  >
-                    <OrderedListOutlined />
-                  </ToolbarButton>
-                  <ToolbarButton
-                    onClick={insertLink}
-                    title="Insert Link"
-                  >
-                    <LinkOutlined />
-                  </ToolbarButton>
-                </RichTextToolbar>
-                
-                <CommentTextArea
-                  value={newComment}
-                  onChange={handleCommentChange}
-                  placeholder="Add your rich-text comment here..."
-                  rows={4}
-                />
-                
-                <CommentActions>
-                  <AddCommentButton 
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim()}
-                  >
-                    Add Comment
-                  </AddCommentButton>
-                </CommentActions>
-              </CommentForm>
             </CommentsSection>
           </RightColumn>
         </TicketContent>
