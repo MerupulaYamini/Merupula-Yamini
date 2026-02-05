@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Tag, message } from 'antd';
+import { message } from 'antd';
 import { 
   ArrowLeftOutlined, 
   EditOutlined, 
   DeleteOutlined,
   FileTextOutlined,
-  VideoCameraOutlined,
   PaperClipOutlined,
   ClockCircleOutlined,
   BoldOutlined,
@@ -17,6 +16,7 @@ import {
   LinkOutlined
 } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
+import { getTicketById, deleteTicket, mapStatus, mapLabel } from '../../services/ticketService';
 import {
   TicketDetailsContainer,
   TicketHeader,
@@ -91,12 +91,30 @@ const TicketDetails = () => {
   const [loading, setLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [newComment, setNewComment] = useState('');
-  const [comments, setComments] = useState([]);
   const [activeFormats, setActiveFormats] = useState({
     bold: false,
     italic: false,
     underline: false
   });
+
+  // Fetch ticket details on component mount
+  useEffect(() => {
+    fetchTicketDetails();
+  }, [ticketId]);
+
+  const fetchTicketDetails = async () => {
+    setLoading(true);
+    try {
+      const data = await getTicketById(ticketId);
+      setTicket(data);
+      setSelectedStatus(data.status);
+    } catch (error) {
+      console.error('Failed to fetch ticket:', error);
+      message.error(error.message || 'Failed to load ticket details');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Mock ticket data - in real app, this would come from API
   const mockTickets = {
@@ -315,19 +333,6 @@ const TicketDetails = () => {
     }
   };
 
-  useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      const foundTicket = mockTickets[ticketId];
-      setTicket(foundTicket);
-      if (foundTicket) {
-        setSelectedStatus(foundTicket.status);
-        setComments(foundTicket.comments || []);
-      }
-      setLoading(false);
-    }, 500);
-  }, [ticketId]);
-
   const handleBack = () => {
     navigate('/dashboard');
   };
@@ -336,12 +341,19 @@ const TicketDetails = () => {
     navigate(`/edit-ticket/${ticketId}`);
   };
 
-  const handleDelete = () => {
-    message.success('Ticket deleted successfully');
-    navigate('/dashboard');
+  const handleDelete = async () => {
+    try {
+      await deleteTicket(ticketId);
+      message.success('Ticket deleted successfully');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Delete ticket error:', error);
+      message.error(error.message || 'Failed to delete ticket');
+    }
   };
 
   const handleStatusUpdate = () => {
+    // TODO: Implement status update API call
     setTicket(prev => ({ ...prev, status: selectedStatus }));
     message.success('Ticket status updated successfully');
   };
@@ -350,14 +362,16 @@ const TicketDetails = () => {
     setSelectedStatus(e.target.value);
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'Critical': return '#ff4d4f';
-      case 'High': return '#fa8c16';
-      case 'Medium': return '#1890ff';
-      case 'Low': return '#52c41a';
-      default: return '#8c8c8c';
-    }
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getAttachmentIcon = (type) => {
@@ -431,6 +445,18 @@ const TicketDetails = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <MainLayout>
+        <TicketDetailsContainer>
+          <NotFoundMessage>
+            <h2>Loading ticket details...</h2>
+          </NotFoundMessage>
+        </TicketDetailsContainer>
+      </MainLayout>
+    );
+  }
+
   if (!ticket) {
     return (
       <MainLayout>
@@ -456,7 +482,7 @@ const TicketDetails = () => {
               <ArrowLeftOutlined /> Back to Dashboard
             </BackButton>
             <TicketTitle>{ticket.title}</TicketTitle>
-            <TicketId>{ticket.id}</TicketId>
+            <TicketId>TKT-{String(ticket.id).padStart(3, '0')}</TicketId>
           </div>
           
           <ActionButtons>
@@ -475,21 +501,18 @@ const TicketDetails = () => {
               <InfoRow>
                 <InfoLabel>Status:</InfoLabel>
                 <InfoValue>
-                  <StatusTag className={ticket.statusType}>{ticket.status}</StatusTag>
+                  <StatusTag className={mapStatus(ticket.status)}>
+                    {ticket.status.replace('_', ' ')}
+                  </StatusTag>
                 </InfoValue>
               </InfoRow>
               
               <InfoRow>
                 <InfoLabel>Label:</InfoLabel>
                 <InfoValue>
-                  <LabelTag className={ticket.labelType}>{ticket.label}</LabelTag>
-                </InfoValue>
-              </InfoRow>
-              
-              <InfoRow>
-                <InfoLabel>Priority:</InfoLabel>
-                <InfoValue>
-                  <Tag color={getPriorityColor(ticket.priority)}>{ticket.priority}</Tag>
+                  <LabelTag className={mapLabel(ticket.label)}>
+                    {ticket.label.replace('_', ' ')}
+                  </LabelTag>
                 </InfoValue>
               </InfoRow>
               
@@ -497,7 +520,7 @@ const TicketDetails = () => {
                 <InfoLabel>Assigned To:</InfoLabel>
                 <InfoValue>
                   <UserInfo>
-                    <UserName>{ticket.assignedTo}</UserName>
+                    <UserName>{ticket.assignedToName || 'Unassigned'}</UserName>
                   </UserInfo>
                 </InfoValue>
               </InfoRow>
@@ -506,24 +529,19 @@ const TicketDetails = () => {
                 <InfoLabel>Created By:</InfoLabel>
                 <InfoValue>
                   <UserInfo>
-                    <UserName>{ticket.createdBy}</UserName>
+                    <UserName>{ticket.createdByName || 'Unknown'}</UserName>
                   </UserInfo>
                 </InfoValue>
               </InfoRow>
               
               <InfoRow>
                 <InfoLabel>Created Date:</InfoLabel>
-                <InfoValue>{ticket.createdDate}</InfoValue>
+                <InfoValue>{formatDate(ticket.createdAt)}</InfoValue>
               </InfoRow>
               
               <InfoRow>
-                <InfoLabel>Estimated Hours:</InfoLabel>
-                <InfoValue>{ticket.estimatedHours}h</InfoValue>
-              </InfoRow>
-              
-              <InfoRow>
-                <InfoLabel>Actual Hours:</InfoLabel>
-                <InfoValue>{ticket.actualHours}h</InfoValue>
+                <InfoLabel>Last Updated:</InfoLabel>
+                <InfoValue>{formatDate(ticket.updatedAt)}</InfoValue>
               </InfoRow>
             </InfoSection>
 
@@ -534,10 +552,11 @@ const TicketDetails = () => {
                 value={selectedStatus} 
                 onChange={handleStatusChange}
               >
-                <option value="Todo">Todo</option>
-                <option value="In Progress">In Progress</option>
-                <option value="Review">Review</option>
-                <option value="Ready To Deploy">Ready To Deploy</option>
+                <option value="TODO">Todo</option>
+                <option value="IN_PROGRESS">In Progress</option>
+                <option value="PAUSED">Paused</option>
+                <option value="REVIEW">Review</option>
+                <option value="DEPLOYED_DONE">Deployed/Done</option>
               </StatusSelect>
               <UpdateStatusButton onClick={handleStatusUpdate}>
                 Update Status
@@ -550,15 +569,21 @@ const TicketDetails = () => {
                 Status History
               </StatusHistoryTitle>
               <StatusHistoryList>
-                {ticket.statusHistory.map((historyItem) => (
-                  <StatusHistoryItem key={historyItem.id}>
-                    <StatusHistoryDot />
-                    <StatusHistoryContent>
-                      <StatusHistoryText>{historyItem.action}</StatusHistoryText>
-                      <StatusHistoryTime>{historyItem.timestamp}</StatusHistoryTime>
-                    </StatusHistoryContent>
-                  </StatusHistoryItem>
-                ))}
+                {ticket.statusHistory && ticket.statusHistory.length > 0 ? (
+                  ticket.statusHistory.map((history) => (
+                    <StatusHistoryItem key={history.id}>
+                      <StatusHistoryDot />
+                      <StatusHistoryContent>
+                        <StatusHistoryText>
+                          Status changed from "{history.fromStatus.replace('_', ' ')}" to "{history.toStatus.replace('_', ' ')}" by {history.updatedByName}
+                        </StatusHistoryText>
+                        <StatusHistoryTime>{formatDate(history.updatedAt)}</StatusHistoryTime>
+                      </StatusHistoryContent>
+                    </StatusHistoryItem>
+                  ))
+                ) : (
+                  <StatusHistoryText>No status history available</StatusHistoryText>
+                )}
               </StatusHistoryList>
             </StatusHistorySection>
           </LeftColumn>
@@ -566,10 +591,11 @@ const TicketDetails = () => {
           <RightColumn>
             <DescriptionSection>
               <TicketTitleSection>
-                <TicketTitleDisplay>{ticket.ticketTitle}</TicketTitleDisplay>
+                <TicketTitleDisplay>{ticket.title}</TicketTitleDisplay>
               </TicketTitleSection>
               
               <SectionTitle>Description</SectionTitle>
+              <DescriptionText>{ticket.description || 'No description provided'}</DescriptionText>
               <DescriptionText>{ticket.description}</DescriptionText>
               
               {ticket.attachments && ticket.attachments.length > 0 && (
@@ -606,30 +632,24 @@ const TicketDetails = () => {
               <CommentsSectionTitle>Comments</CommentsSectionTitle>
               
               <CommentsTimeline>
-                {comments.map((comment, index) => (
-                  <CommentItem key={comment.id} className={index === 0 ? 'highlighted' : ''}>
-                    <CommentHeader>
-                      <CommentAuthor>
-                        <AuthorName>{comment.author}</AuthorName>
-                        {comment.isOnline && <OnlineIndicator />}
-                      </CommentAuthor>
-                      <CommentTimestamp>{comment.timestamp}</CommentTimestamp>
-                    </CommentHeader>
-                    <CommentContent>
-                      {comment.content.split('\n').map((line, lineIndex) => (
-                        <div key={lineIndex}>
-                          {line.startsWith('•') ? (
-                            <ul><li>{line.substring(1).trim()}</li></ul>
-                          ) : line.match(/^\d+\./) ? (
-                            <ol><li>{line.replace(/^\d+\.\s*/, '')}</li></ol>
-                          ) : (
-                            line
-                          )}
-                        </div>
-                      ))}
-                    </CommentContent>
-                  </CommentItem>
-                ))}
+                {ticket.comments && ticket.comments.length > 0 ? (
+                  ticket.comments.map((comment, index) => (
+                    <CommentItem key={comment.id} className={index === 0 ? 'highlighted' : ''}>
+                      <CommentHeader>
+                        <CommentAuthor>
+                          <AuthorName>{comment.authorName}</AuthorName>
+                          <OnlineIndicator />
+                        </CommentAuthor>
+                        <CommentTimestamp>{formatDate(comment.createdAt)}</CommentTimestamp>
+                      </CommentHeader>
+                      <CommentContent>
+                        {comment.content}
+                      </CommentContent>
+                    </CommentItem>
+                  ))
+                ) : (
+                  <CommentContent>No comments yet. Be the first to comment!</CommentContent>
+                )}
               </CommentsTimeline>
 
               <CommentForm>
