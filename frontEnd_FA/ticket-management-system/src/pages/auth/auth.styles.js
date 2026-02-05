@@ -1,0 +1,152 @@
+import styled from 'styled-components';
+import { Form, Button } from 'antd';
+
+export const AuthPageWrapper = styled.div`
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  padding: 20px;
+`;
+
+export const AuthCard = styled.div`
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+
+  @media (max-width: 768px) {
+    padding: 30px 20px;
+    margin: 0 10px;
+  }
+`;
+
+export const BrandTitle = styled.h1`
+  color: #1890ff;
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  margin-top: 0;
+`;
+
+export const BrandSubTitle = styled.p`
+  color: #8c8c8c;
+  font-size: 16px;
+  margin-bottom: 32px;
+  margin-top: 0;
+`;
+
+export const StyledForm = styled(Form)`
+  .ant-form-item {
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  .ant-form-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .ant-form-item-label > label {
+    color: #262626;
+    font-weight: 500;
+  }
+
+  .ant-input-affix-wrapper {
+    padding: 12px 16px;
+    border-radius: 6px;
+    border: 1px solid #d9d9d9;
+    height: 48px;
+    
+    &:hover {
+      border-color: #40a9ff;
+    }
+    
+    &:focus-within {
+      border-color: #1890ff;
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    }
+  }
+
+  .ant-input {
+    border: none;
+    padding: 0;
+    
+    &:focus {
+      box-shadow: none;
+    }
+  }
+`;
+
+export const ForgotPasswordLink = styled.a`
+  color: #1890ff;
+  text-decoration: none;
+  font-size: 14px;
+  display: block;
+  text-align: right;
+  margin-bottom: 24px;
+  
+  &:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+  }
+`;
+
+export const SignInButton = styled(Button)`
+  width: 100%;
+  height: 48px;
+  background-color: #1890ff;
+  border-color: #1890ff;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  
+  &:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+  
+  &:focus {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+`;
+
+export const DividerText = styled.div`
+  position: relative;
+  text-align: center;
+  margin: 24px 0;
+  color: #8c8c8c;
+  font-size: 14px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #f0f0f0;
+  }
+  
+  span {
+    background-color: white;
+    padding: 0 16px;
+    position: relative;
+    z-index: 1;
+  }
+`;
+
+export const CreateAccountLink = styled.a`
+  color: #1890ff;
+  text-decoration: none;
+  font-size: 14px;
+  
+  &:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+  }
+`;
