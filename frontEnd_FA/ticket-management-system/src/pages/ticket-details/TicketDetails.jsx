@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import { 
   ArrowLeftOutlined, 
   EditOutlined, 
@@ -8,6 +8,7 @@ import {
   FileTextOutlined,
   PaperClipOutlined,
   ClockCircleOutlined,
+  ExclamationCircleOutlined,
   BoldOutlined,
   ItalicOutlined,
   UnderlineOutlined,
@@ -338,15 +339,26 @@ const TicketDetails = () => {
     navigate(`/edit-ticket/${ticketId}`);
   };
 
-  const handleDelete = async () => {
-    try {
-      await deleteTicket(ticketId);
-      message.success('Ticket deleted successfully');
-      navigate('/dashboard');
-    } catch (error) {
-      console.error('Delete ticket error:', error);
-      message.error(error.message || 'Failed to delete ticket');
-    }
+  const handleDelete = () => {
+    Modal.confirm({
+      title: 'Delete Ticket',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Are you sure you want to delete this ticket? This action cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          console.log('Deleting ticket:', ticketId);
+          await deleteTicket(ticketId);
+          message.success('Ticket deleted successfully');
+          navigate('/dashboard');
+        } catch (error) {
+          console.error('Delete ticket error:', error);
+          message.error(error.message || 'Failed to delete ticket');
+        }
+      }
+    });
   };
 
   const handleStatusUpdate = async () => {
