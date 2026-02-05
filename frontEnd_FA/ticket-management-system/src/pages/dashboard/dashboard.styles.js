@@ -4,6 +4,14 @@ import { LogoutOutlined } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;
 
+// Breakpoints
+const breakpoints = {
+  mobile: '576px',
+  tablet: '768px',
+  desktop: '992px',
+  large: '1200px'
+};
+
 export const DashboardLayout = styled(Layout)`
   min-height: 100vh;
 `;
@@ -80,17 +88,36 @@ export const PageTitle = styled.h1`
   font-size: 28px;
   font-weight: 600;
   margin-bottom: 8px;
+
+  @media (max-width: ${breakpoints.tablet}) {
+    font-size: 24px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 20px;
+  }
 `;
 
 export const PageSubtitle = styled.p`
   color: #8c8c8c;
   font-size: 16px;
   margin-bottom: 24px;
+
+  @media (max-width: ${breakpoints.tablet}) {
+    font-size: 14px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 13px;
+    margin-bottom: 16px;
+  }
 `;
 
 export const PendingCard = styled(Card)`
-  width: 1034px;
-  height: 326px;
+  width: 100%;
+  max-width: 1034px;
+  min-height: 326px;
+  height: auto;
   background: #FFFFFF;
   border-radius: 8px;
   border: 1.5px solid #d9d9d9;
@@ -185,11 +212,21 @@ export const PaginationContainer = styled.div`
   padding: 16px 24px;
   background: #fafafa;
   border-top: 1px solid #f0f0f0;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
 `;
 
 export const ShowingText = styled.span`
   color: #8c8c8c;
   font-size: 14px;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 12px;
+  }
 `;
 
 export const PaginationButtons = styled.div`
@@ -207,6 +244,10 @@ export const PaginationButton = styled(Button)`
 // Ticket Management Components
 export const TicketSection = styled.div`
   margin-top: 24px;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    margin-top: 16px;
+  }
 `;
 
 export const SectionTitle = styled.h2`
@@ -214,6 +255,11 @@ export const SectionTitle = styled.h2`
   font-size: 20px;
   font-weight: 600;
   margin-bottom: 16px;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
 `;
 
 export const TicketHeader = styled.div`
@@ -223,6 +269,11 @@ export const TicketHeader = styled.div`
   margin-bottom: 16px;
   flex-wrap: wrap;
   gap: 16px;
+
+  @media (max-width: ${breakpoints.desktop}) {
+    flex-direction: column;
+    align-items: stretch;
+  }
 `;
 
 export const CreateTicketButton = styled(Button)`
@@ -237,6 +288,11 @@ export const CreateTicketButton = styled(Button)`
     background-color: #40a9ff;
     border-color: #40a9ff;
   }
+
+  @media (max-width: ${breakpoints.desktop}) {
+    width: 100%;
+    justify-content: center;
+  }
 `;
 
 export const TicketFilters = styled.div`
@@ -244,6 +300,15 @@ export const TicketFilters = styled.div`
   gap: 12px;
   align-items: center;
   flex-wrap: wrap;
+
+  @media (max-width: ${breakpoints.desktop}) {
+    width: 100%;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    gap: 8px;
+  }
 `;
 
 export const SearchInput = styled(Input)`
@@ -261,7 +326,12 @@ export const SearchInput = styled(Input)`
     box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.desktop}) {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
     width: 100%;
   }
 `;
@@ -284,6 +354,15 @@ export const FilterSelect = styled.select`
     border-color: #1890ff;
     box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
   }
+
+  @media (max-width: ${breakpoints.desktop}) {
+    flex: 1;
+    min-width: 150px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    width: 100%;
+  }
 `;
 
 export const TicketTable = styled.div`
@@ -296,6 +375,10 @@ export const TicketTable = styled.div`
   &:hover {
     border-color: #1890ff;
     box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
+
+  @media (max-width: ${breakpoints.tablet}) {
+    overflow-x: auto;
   }
 `;
 
@@ -310,13 +393,13 @@ export const TableHeader = styled.div`
   font-size: 12px;
   text-transform: uppercase;
   
-  @media (max-width: 1200px) {
+  @media (max-width: ${breakpoints.large}) {
     grid-template-columns: 80px 2fr 100px 100px 120px 100px 80px;
     font-size: 11px;
   }
   
-  @media (max-width: 768px) {
-    display: none;
+  @media (max-width: ${breakpoints.tablet}) {
+    min-width: 800px;
   }
 `;
 
@@ -334,18 +417,16 @@ export const TableRow = styled.div`
     padding-left: 13px;
   }
   
-  &:last-child {
-    border-bottom: none;
-  }
-  
-  @media (max-width: 1200px) {
+  @media (max-width: ${breakpoints.large}) {
     grid-template-columns: 80px 2fr 100px 100px 120px 100px 80px;
   }
   
-  @media (max-width: 768px) {
-    display: block;
-    padding: 16px;
-    border-bottom: 2px solid #f0f0f0;
+  @media (max-width: ${breakpoints.tablet}) {
+    min-width: 800px;
+  }
+  
+  &:last-child {
+    border-bottom: none;
   }
 `;
 
@@ -354,12 +435,33 @@ export const TicketId = styled.span`
   font-weight: 600;
   color: #262626;
   font-size: 12px;
+  
+  @media (max-width: ${breakpoints.tablet}) {
+    display: block;
+    margin-bottom: 8px;
+    
+    &::before {
+      content: 'Ticket ID: ';
+      font-family: inherit;
+      font-weight: 500;
+      color: #8c8c8c;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+  }
 `;
 
 export const TicketTitle = styled.span`
   color: #262626;
   font-size: 14px;
   font-weight: 500;
+  
+  @media (max-width: ${breakpoints.tablet}) {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 600;
+  }
 `;
 
 export const LabelTag = styled.span`
@@ -367,6 +469,7 @@ export const LabelTag = styled.span`
   border-radius: 4px;
   font-size: 11px;
   font-weight: 500;
+  display: inline-block;
   
   &.new-feature {
     background-color: #e6f7ff;
@@ -382,6 +485,21 @@ export const LabelTag = styled.span`
     background-color: #f6ffed;
     color: #52c41a;
   }
+  
+  @media (max-width: ${breakpoints.tablet}) {
+    margin-bottom: 8px;
+    
+    &::before {
+      content: 'Label: ';
+      font-weight: 500;
+      color: #8c8c8c;
+      font-size: 11px;
+      text-transform: uppercase;
+      background: transparent;
+      padding: 0;
+      margin-right: 4px;
+    }
+  }
 `;
 
 export const StatusTag = styled.span`
@@ -389,6 +507,7 @@ export const StatusTag = styled.span`
   border-radius: 4px;
   font-size: 11px;
   font-weight: 500;
+  display: inline-block;
   
   &.in-progress {
     background-color: #e6f7ff;
@@ -409,17 +528,58 @@ export const StatusTag = styled.span`
     background-color: #f6ffed;
     color: #52c41a;
   }
+  
+  @media (max-width: ${breakpoints.tablet}) {
+    margin-bottom: 8px;
+    
+    &::before {
+      content: 'Status: ';
+      font-weight: 500;
+      color: #8c8c8c;
+      font-size: 11px;
+      text-transform: uppercase;
+      background: transparent;
+      padding: 0;
+      margin-right: 4px;
+    }
+  }
 `;
 
 export const UserName = styled.span`
   color: #262626;
   font-size: 13px;
+  
+  @media (max-width: ${breakpoints.tablet}) {
+    display: block;
+    margin-bottom: 8px;
+    
+    &:nth-of-type(1)::before {
+      content: 'Assigned To: ';
+      font-weight: 500;
+      color: #8c8c8c;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    
+    &:nth-of-type(2)::before {
+      content: 'Created By: ';
+      font-weight: 500;
+      color: #8c8c8c;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+  }
 `;
 
 export const ActionMenu = styled.div`
   display: flex;
   gap: 8px;
   align-items: center;
+  
+  @media (max-width: ${breakpoints.tablet}) {
+    margin-top: 8px;
+    justify-content: flex-start;
+  }
 `;
 
 export const ViewButton = styled(Button)`

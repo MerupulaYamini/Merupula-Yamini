@@ -3,6 +3,14 @@ import { Form, Input, Button, Avatar } from 'antd';
 
 const { TextArea } = Input;
 
+// Breakpoints
+const breakpoints = {
+  mobile: '576px',
+  tablet: '768px',
+  desktop: '992px',
+  large: '1200px'
+};
+
 export const ProfileContainer = styled.div`
   max-width: 800px;
   margin: 0 auto;
@@ -11,6 +19,11 @@ export const ProfileContainer = styled.div`
   border: 1px solid #d9d9d9;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   overflow: hidden;
+
+  @media (max-width: ${breakpoints.tablet}) {
+    margin: 0;
+    border-radius: 0;
+  }
 `;
 
 export const ProfileHeader = styled.div`
@@ -19,6 +32,14 @@ export const ProfileHeader = styled.div`
   background: #fafafa;
   border: 1px solid #e8e8e8;
   border-bottom: 2px solid #d9d9d9;
+
+  @media (max-width: ${breakpoints.tablet}) {
+    padding: 20px 24px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 16px;
+  }
 `;
 
 export const ProfileTitle = styled.h1`
@@ -26,12 +47,20 @@ export const ProfileTitle = styled.h1`
   font-weight: 600;
   color: #262626;
   margin: 0 0 8px 0;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 20px;
+  }
 `;
 
 export const ProfileSubtitle = styled.p`
   font-size: 14px;
   color: #8c8c8c;
   margin: 0;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 13px;
+  }
 `;
 
 export const ProfileContent = styled.div`
@@ -54,6 +83,14 @@ export const ProfileSection = styled.div`
     border-left: 2px solid #1890ff;
     transition: all 0.3s ease;
   }
+
+  @media (max-width: ${breakpoints.tablet}) {
+    padding: 24px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 16px;
+  }
 `;
 
 export const SectionTitle = styled.h2`
@@ -61,12 +98,21 @@ export const SectionTitle = styled.h2`
   font-weight: 600;
   color: #262626;
   margin: 0 0 8px 0;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 16px;
+  }
 `;
 
 export const SectionSubtitle = styled.p`
   font-size: 14px;
   color: #8c8c8c;
   margin: 0 0 24px 0;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 13px;
+    margin: 0 0 16px 0;
+  }
 `;
 
 export const ProfileForm = styled(Form)`
@@ -132,10 +178,21 @@ export const AvatarSection = styled.div`
   border: 1px dashed #d9d9d9;
   border-radius: 8px;
   background: #fafafa;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
 `;
 
 export const AvatarContainer = styled.div`
   flex-shrink: 0;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    align-self: center;
+  }
 `;
 
 export const ProfileAvatar = styled(Avatar)`
@@ -171,6 +228,15 @@ export const ButtonGroup = styled.div`
   margin-top: 24px;
   padding-top: 16px;
   border-top: 1px solid #e8e8e8;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column-reverse;
+    gap: 8px;
+    
+    button {
+      width: 100%;
+    }
+  }
 `;
 
 export const CancelButton = styled(Button)`

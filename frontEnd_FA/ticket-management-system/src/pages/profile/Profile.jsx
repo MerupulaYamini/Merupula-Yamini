@@ -65,16 +65,9 @@ const Profile = () => {
   const fetchUserProfile = async () => {
     setLoading(true);
     try {
-      // Get current logged-in user
       const currentUser = getCurrentUser();
       const currentUserId = currentUser.userId;
-      
-      // Determine which user to fetch
       const targetUserId = urlUserId || currentUserId;
-      
-      console.log('Current user ID:', currentUserId);
-      console.log('Target user ID:', targetUserId);
-      console.log('Is own profile:', !urlUserId || urlUserId === currentUserId);
       
       if (!currentUserId) {
         message.error('User not logged in');
@@ -82,27 +75,19 @@ const Profile = () => {
         return;
       }
 
-      // Check if viewing own profile
       const viewingOwnProfile = !urlUserId || urlUserId === currentUserId;
       setIsOwnProfile(viewingOwnProfile);
       
-      // Check if current user is admin
       const currentUserRoles = currentUser.roles || [];
       const isAdmin = currentUserRoles.includes('ADMIN');
       setIsCurrentUserAdmin(isAdmin);
 
       let userDetails;
 
-      // If viewing own profile, use the new profile API
       if (viewingOwnProfile) {
-        console.log('Fetching own profile from /api/profile/me');
         userDetails = await getMyProfile();
-        console.log('My profile fetched:', userDetails);
       } else {
-        // Admin viewing another user's profile
-        console.log('Admin fetching user details from API');
         userDetails = await getUserById(targetUserId);
-        console.log('User profile fetched:', userDetails);
       }
       
       setUserData({
@@ -113,16 +98,14 @@ const Profile = () => {
         status: userDetails.status,
         roles: userDetails.roles || [],
         createdAt: userDetails.createdAt,
-        avatar: null // Backend doesn't return avatar URL yet
+        avatar: null
       });
 
-      // Set form values
       profileForm.setFieldsValue({
         username: userDetails.username,
         bio: userDetails.bio || ''
       });
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
       message.error('Failed to load profile data');
     } finally {
       setLoading(false);
@@ -131,45 +114,30 @@ const Profile = () => {
 
   const handleProfileSave = async (values) => {
     setProfileLoading(true);
-    console.log('=== PROFILE UPDATE ===');
-    console.log('Form values:', values);
     
     try {
       const formData = new FormData();
       
-      // Only add fields that have changed
       if (values.username && values.username !== userData.username) {
         formData.append('username', values.username);
-        console.log('  - username:', values.username);
       }
       
       if (values.bio !== undefined && values.bio !== userData.bio) {
         formData.append('bio', values.bio);
-        console.log('  - bio:', values.bio);
       }
       
       if (selectedFile) {
         formData.append('profilePicture', selectedFile);
-        console.log('  - profilePicture:', selectedFile.name);
       }
       
-      console.log('Calling update profile API...');
       const response = await updateMyProfile(formData);
-      console.log('Profile updated:', response);
-      
       message.success('Profile updated successfully!');
       
-      // Refresh profile data
       await fetchUserProfile();
       setSelectedFile(null);
     } catch (error) {
-      console.error('=== PROFILE UPDATE ERROR ===');
-      console.error('Error:', error);
-      
-      // Show field-specific errors
       if (error.fieldErrors) {
         Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
-          console.error(`  - ${field}: ${errorMsg}`);
           message.error(`${field}: ${errorMsg}`);
         });
       } else {
@@ -177,27 +145,19 @@ const Profile = () => {
       }
     } finally {
       setProfileLoading(false);
-      console.log('=== PROFILE UPDATE COMPLETE ===');
     }
   };
 
   const handlePasswordUpdate = async (values) => {
     setPasswordLoading(true);
-    console.log('=== PASSWORD CHANGE ===');
     
     try {
       await changePassword(values.currentPassword, values.newPassword);
-      
       message.success('Password updated successfully!');
       passwordForm.resetFields();
     } catch (error) {
-      console.error('=== PASSWORD CHANGE ERROR ===');
-      console.error('Error:', error);
-      
-      // Show field-specific errors
       if (error.fieldErrors) {
         Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
-          console.error(`  - ${field}: ${errorMsg}`);
           message.error(`${field}: ${errorMsg}`);
         });
       } else if (error.status === 401) {
@@ -207,7 +167,6 @@ const Profile = () => {
       }
     } finally {
       setPasswordLoading(false);
-      console.log('=== PASSWORD CHANGE COMPLETE ===');
     }
   };
 
@@ -226,10 +185,6 @@ const Profile = () => {
 
   const handleAdminPasswordReset = async (values) => {
     setAdminPasswordLoading(true);
-    console.log('Admin password reset values:', {
-      targetUserId: values.targetUserId,
-      newPassword: values.newUserPassword
-    });
     
     setTimeout(() => {
       setAdminPasswordLoading(false);

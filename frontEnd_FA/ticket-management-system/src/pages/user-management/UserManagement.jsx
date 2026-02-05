@@ -44,12 +44,8 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      console.log('Fetching all users...');
       const usersData = await getAllUsers();
-      console.log('Users fetched:', usersData);
       
-      // Fetch detailed info for each user to get roles
-      console.log('Fetching roles for each user...');
       const usersWithRoles = await Promise.all(
         usersData.map(async (user) => {
           try {
@@ -59,19 +55,16 @@ const UserManagement = () => {
               roles: userDetails.roles || ['EMPLOYEE']
             };
           } catch (error) {
-            console.error(`Failed to fetch roles for user ${user.id}:`, error);
             return {
               ...user,
-              roles: ['EMPLOYEE'] // Fallback
+              roles: ['EMPLOYEE']
             };
           }
         })
       );
       
-      console.log('Users with roles:', usersWithRoles);
       setUsers(usersWithRoles);
     } catch (error) {
-      console.error('Failed to fetch users:', error);
       message.error('Failed to load users');
     } finally {
       setLoading(false);
@@ -88,12 +81,10 @@ const UserManagement = () => {
       cancelText: 'Cancel',
       onOk: async () => {
         try {
-          console.log('Deleting user:', userId);
           await deleteUser(userId);
           message.success('User deleted successfully');
-          fetchUsers(); // Refresh the list
+          fetchUsers();
         } catch (error) {
-          console.error('Delete user error:', error);
           message.error(error.message || 'Failed to delete user');
         }
       }
@@ -101,7 +92,6 @@ const UserManagement = () => {
   };
 
   const handleViewUser = (userId) => {
-    console.log('Viewing user profile for ID:', userId);
     navigate(`/profile/${userId}`);
   };
 

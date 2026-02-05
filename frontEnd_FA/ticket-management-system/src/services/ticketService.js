@@ -16,7 +16,6 @@ const API_BASE_URL = '/api';
  */
 export const getAllTickets = async (params = {}) => {
   try {
-    // Build query string from params
     const queryParams = new URLSearchParams();
     
     if (params.search) queryParams.append('search', params.search);
@@ -35,11 +34,9 @@ export const getAllTickets = async (params = {}) => {
       headers: getAuthHeaders(),
     });
 
-    // Check if response is JSON
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('Non-JSON response:', text);
       throw {
         status: response.status,
         message: 'Server returned an invalid response',
@@ -59,7 +56,6 @@ export const getAllTickets = async (params = {}) => {
 
     return data;
   } catch (error) {
-    console.error('Get tickets error:', error);
     throw error;
   }
 };
@@ -74,9 +70,6 @@ export const getAllTickets = async (params = {}) => {
  */
 export const getMyTickets = async (params = {}) => {
   try {
-    console.log('Fetching my tickets with params:', params);
-    
-    // Build query string from params
     const queryParams = new URLSearchParams();
     
     if (params.page !== undefined) queryParams.append('page', params.page);
@@ -91,11 +84,9 @@ export const getMyTickets = async (params = {}) => {
       headers: getAuthHeaders(),
     });
 
-    // Check if response is JSON
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('Non-JSON response:', text);
       throw {
         status: response.status,
         message: 'Server returned an invalid response',
@@ -113,10 +104,8 @@ export const getMyTickets = async (params = {}) => {
       };
     }
 
-    console.log('My tickets fetched successfully:', data);
     return data;
   } catch (error) {
-    console.error('Get my tickets error:', error);
     throw error;
   }
 };
@@ -155,7 +144,6 @@ export const getTicketById = async (ticketId) => {
 
     return data;
   } catch (error) {
-    console.error('Get ticket error:', error);
     throw error;
   }
 };
@@ -172,53 +160,27 @@ export const getTicketById = async (ticketId) => {
  * @returns {Promise} Created ticket data
  */
 export const createTicket = async (ticketData) => {
-  console.log('=== CREATE TICKET SERVICE ===');
-  console.log('Input data:', ticketData);
-  
   try {
-    // Create FormData for multipart/form-data
-    console.log('1. Creating FormData...');
     const formData = new FormData();
     
-    // Add required fields
-    console.log('2. Adding required fields to FormData...');
     formData.append('title', ticketData.title);
-    console.log('   - Added title:', ticketData.title);
-    
     formData.append('description', ticketData.description);
-    console.log('   - Added description (length):', ticketData.description.length);
-    
     formData.append('label', ticketData.label);
-    console.log('   - Added label:', ticketData.label);
-    
     formData.append('assignedToUserId', ticketData.assignedToUserId);
-    console.log('   - Added assignedToUserId:', ticketData.assignedToUserId);
     
-    // Add optional file attachments
     if (ticketData.attachments && ticketData.attachments.length > 0) {
-      console.log('3. Adding file attachments...');
-      ticketData.attachments.forEach((file, index) => {
+      ticketData.attachments.forEach((file) => {
         formData.append('attachments', file);
-        console.log(`   - Added file ${index + 1}:`, file.name, `(${file.size} bytes)`);
       });
-    } else {
-      console.log('3. No file attachments to add');
     }
     
-    // Add optional attachment URLs
     if (ticketData.attachmentUrls && ticketData.attachmentUrls.length > 0) {
-      console.log('4. Adding attachment URLs...');
-      ticketData.attachmentUrls.forEach((url, index) => {
+      ticketData.attachmentUrls.forEach((url) => {
         formData.append('attachmentUrls', url);
-        console.log(`   - Added URL ${index + 1}:`, url);
       });
-    } else {
-      console.log('4. No attachment URLs to add');
     }
 
-    // Get auth token
     const token = localStorage.getItem('token');
-    console.log('5. JWT Token:', token ? `${token.substring(0, 20)}...` : 'NOT FOUND');
     
     if (!token) {
       throw {
@@ -228,31 +190,19 @@ export const createTicket = async (ticketData) => {
     }
     
     const url = `${API_BASE_URL}/tickets`;
-    console.log('6. Making POST request to:', url);
-    console.log('   - Method: POST');
-    console.log('   - Content-Type: multipart/form-data (set by browser)');
-    console.log('   - Authorization: Bearer token');
     
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
-        // NO Content-Type header - browser sets it automatically for FormData
       },
       body: formData,
     });
 
-    console.log('7. Response received:');
-    console.log('   - Status:', response.status);
-    console.log('   - Status Text:', response.statusText);
-    console.log('   - OK:', response.ok);
-
     const contentType = response.headers.get('content-type');
-    console.log('   - Content-Type:', contentType);
     
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('8. ERROR: Non-JSON response:', text);
       throw {
         status: response.status,
         message: 'Server returned an invalid response',
@@ -261,13 +211,8 @@ export const createTicket = async (ticketData) => {
     }
 
     const data = await response.json();
-    console.log('8. Response data:', data);
 
     if (!response.ok) {
-      console.error('9. ERROR: Request failed');
-      console.error('   - Status:', response.status);
-      console.error('   - Message:', data.message);
-      console.error('   - Field Errors:', data.fieldErrors);
       throw {
         status: response.status,
         message: data.message || 'Failed to create ticket',
@@ -276,11 +221,8 @@ export const createTicket = async (ticketData) => {
       };
     }
 
-    console.log('9. SUCCESS: Ticket created successfully');
     return data;
   } catch (error) {
-    console.error('=== CREATE TICKET ERROR ===');
-    console.error('Error:', error);
     throw error;
   }
 };
@@ -312,7 +254,6 @@ export const updateTicket = async (ticketId, ticketData) => {
 
     return data;
   } catch (error) {
-    console.error('Update ticket error:', error);
     throw error;
   }
 };
@@ -340,7 +281,6 @@ export const deleteTicket = async (ticketId) => {
 
     return { success: true };
   } catch (error) {
-    console.error('Delete ticket error:', error);
     throw error;
   }
 };
@@ -431,7 +371,6 @@ export const updateTicketStatus = async (ticketId, status) => {
 
     return data;
   } catch (error) {
-    console.error('Update ticket status error:', error);
     throw error;
   }
 };
@@ -472,7 +411,6 @@ export const addComment = async (ticketId, content) => {
 
     return data;
   } catch (error) {
-    console.error('Add comment error:', error);
     throw error;
   }
 };

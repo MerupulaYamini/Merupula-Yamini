@@ -17,6 +17,7 @@ export const StatusTag = styled.span`
   font-weight: 500;
   text-transform: uppercase;
   transition: all 0.2s ease;
+  display: inline-block;
   
   &.active {
     background-color: #f6ffed;
@@ -29,6 +30,22 @@ export const StatusTag = styled.span`
     color: #fa8c16;
     border-color: #ffd591;
   }
+  
+  @media (max-width: 768px) {
+    display: block;
+    margin-bottom: 8px;
+    
+    &::before {
+      content: 'Status: ';
+      font-weight: 500;
+      color: #8c8c8c;
+      font-size: 11px;
+      text-transform: uppercase;
+      background: transparent;
+      padding: 0;
+      margin-right: 4px;
+    }
+  }
 `;
 
 export const RoleTag = styled.span`
@@ -38,6 +55,7 @@ export const RoleTag = styled.span`
   font-size: 11px;
   font-weight: 500;
   transition: all 0.2s ease;
+  display: inline-block;
   
   &.admin {
     background-color: #e6f7ff;
@@ -50,12 +68,32 @@ export const RoleTag = styled.span`
     color: #8c8c8c;
     border-color: #d9d9d9;
   }
+  
+  @media (max-width: 768px) {
+    display: block;
+    margin-bottom: 8px;
+    
+    &::before {
+      content: 'Role: ';
+      font-weight: 500;
+      color: #8c8c8c;
+      font-size: 11px;
+      text-transform: uppercase;
+      background: transparent;
+      padding: 0;
+      margin-right: 4px;
+    }
+  }
 `;
 
 export const UserInfoContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 12px;
+  }
 `;
 
 export const SectionDescription = styled.p`
@@ -73,6 +111,12 @@ export const PaginationFooter = styled.div`
   border-top: 2px solid #e8e8e8;
   color: #8c8c8c;
   font-size: 14px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+  }
 `;
 
 export const PaginationInfo = styled.span`
@@ -129,6 +173,10 @@ export const UserManagementTable = styled.div`
     border-color: #1890ff;
     box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
   }
+  
+  @media (max-width: 768px) {
+    overflow-x: auto;
+  }
 `;
 
 export const UserTableHeader = styled.div`
@@ -148,7 +196,7 @@ export const UserTableHeader = styled.div`
   }
   
   @media (max-width: 768px) {
-    display: none;
+    min-width: 700px;
   }
 `;
 
@@ -175,8 +223,6 @@ export const UserTableRow = styled.div`
   }
   
   @media (max-width: 768px) {
-    display: block;
-    padding: 16px;
-    border-bottom: 2px solid #f0f0f0;
+    min-width: 700px;
   }
 `;

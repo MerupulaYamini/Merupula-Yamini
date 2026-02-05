@@ -68,14 +68,9 @@ const DashboardContent = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
-  // Check if current user is admin
   const currentUser = getCurrentUser();
   const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
-  
-  console.log('Current user:', currentUser);
-  console.log('Is admin:', isAdmin);
 
-  // Fetch tickets from API
   const fetchTickets = async () => {
     setLoading(true);
     try {
@@ -85,14 +80,12 @@ const DashboardContent = () => {
         sort: 'createdAt,desc'
       };
 
-      // Add filters if set
       if (searchTerm) params.search = searchTerm;
       if (statusFilter !== 'All') params.status = statusFilter;
       if (labelFilter !== 'All') params.label = labelFilter;
 
       const data = await getAllTickets(params);
       
-      // Map backend data to frontend format
       const mappedTickets = data.content.map(ticket => ({
         id: ticket.id,
         title: ticket.title,
@@ -114,7 +107,6 @@ const DashboardContent = () => {
         totalPages: data.totalPages
       });
     } catch (error) {
-      console.error('Failed to fetch tickets:', error);
       message.error(error.message || 'Failed to load tickets');
     } finally {
       setLoading(false);
@@ -130,28 +122,18 @@ const DashboardContent = () => {
     }
   }, [pagination.page, statusFilter, labelFilter]);
 
-  // Fetch pending users
   const fetchPendingUsers = async () => {
     setLoadingUsers(true);
     try {
-      console.log('Fetching all users...');
       const users = await getAllUsers();
-      console.log('All users:', users);
-      
-      // Filter only PENDING users
       const pending = users.filter(user => user.status === 'PENDING');
-      console.log('Pending users:', pending);
-      
       setPendingUsers(pending);
     } catch (error) {
-      console.error('Failed to fetch pending users:', error);
-      // Don't show error message, just log it
     } finally {
       setLoadingUsers(false);
     }
   };
 
-  // Handle Accept user (change status to ACTIVE)
   const handleAcceptUser = (userId) => {
     Modal.confirm({
       title: 'Accept User',
@@ -162,19 +144,16 @@ const DashboardContent = () => {
       cancelText: 'Cancel',
       onOk: async () => {
         try {
-          console.log('Accepting user:', userId);
           await updateUserStatus(userId, 'ACTIVE');
           message.success('User accepted successfully');
-          fetchPendingUsers(); // Refresh the list
+          fetchPendingUsers();
         } catch (error) {
-          console.error('Accept user error:', error);
           message.error(error.message || 'Failed to accept user');
         }
       }
     });
   };
 
-  // Handle Decline user (delete user)
   const handleDeclineUser = (userId) => {
     Modal.confirm({
       title: 'Decline User',
@@ -185,12 +164,10 @@ const DashboardContent = () => {
       cancelText: 'Cancel',
       onOk: async () => {
         try {
-          console.log('Declining user:', userId);
           await deleteUser(userId);
           message.success('User declined successfully');
-          fetchPendingUsers(); // Refresh the list
+          fetchPendingUsers();
         } catch (error) {
-          console.error('Decline user error:', error);
           message.error(error.message || 'Failed to decline user');
         }
       }
@@ -222,12 +199,10 @@ const DashboardContent = () => {
       cancelText: 'Cancel',
       onOk: async () => {
         try {
-          console.log('Deleting ticket:', ticketId);
           await deleteTicket(ticketId);
           message.success('Ticket deleted successfully');
-          fetchTickets(); // Refresh the list
+          fetchTickets();
         } catch (error) {
-          console.error('Delete ticket error:', error);
           message.error(error.message || 'Failed to delete ticket');
         }
       }
@@ -244,12 +219,12 @@ const DashboardContent = () => {
 
   const handleStatusFilterChange = (e) => {
     setStatusFilter(e.target.value);
-    setPagination(prev => ({ ...prev, page: 0 })); // Reset to first page
+    setPagination(prev => ({ ...prev, page: 0 }));
   };
 
   const handleLabelFilterChange = (e) => {
     setLabelFilter(e.target.value);
-    setPagination(prev => ({ ...prev, page: 0 })); // Reset to first page
+    setPagination(prev => ({ ...prev, page: 0 }));
   };
 
   const handlePreviousPage = () => {

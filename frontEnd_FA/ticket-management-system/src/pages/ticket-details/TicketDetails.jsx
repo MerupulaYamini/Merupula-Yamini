@@ -112,7 +112,6 @@ const TicketDetails = () => {
       setTicket(data);
       setSelectedStatus(data.status);
     } catch (error) {
-      console.error('Failed to fetch ticket:', error);
       message.error(error.message || 'Failed to load ticket details');
     } finally {
       setLoading(false);
@@ -354,12 +353,10 @@ const TicketDetails = () => {
       cancelText: 'Cancel',
       onOk: async () => {
         try {
-          console.log('Deleting ticket:', ticketId);
           await deleteTicket(ticketId);
           message.success('Ticket deleted successfully');
           navigate('/dashboard');
         } catch (error) {
-          console.error('Delete ticket error:', error);
           message.error(error.message || 'Failed to delete ticket');
         }
       }
@@ -379,7 +376,6 @@ const TicketDetails = () => {
       setSelectedStatus(updatedTicket.status);
       message.success('Ticket status updated successfully');
     } catch (error) {
-      console.error('Update status error:', error);
       message.error(error.message || 'Failed to update ticket status');
     } finally {
       setStatusUpdating(false);
@@ -433,7 +429,6 @@ const TicketDetails = () => {
       setNewComment('');
       message.success('Comment added successfully');
     } catch (error) {
-      console.error('Add comment error:', error);
       message.error(error.message || 'Failed to add comment');
     } finally {
       setCommentSubmitting(false);

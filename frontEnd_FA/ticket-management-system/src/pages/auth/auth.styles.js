@@ -8,6 +8,10 @@ export const AuthPageWrapper = styled.div`
   justify-content: center;
   background-color: #f5f5f5;
   padding: 20px;
+
+  @media (max-width: 576px) {
+    padding: 12px;
+  }
 `;
 
 export const AuthCard = styled.div`
@@ -30,6 +34,12 @@ export const AuthCard = styled.div`
     padding: 30px 20px;
     margin: 0 10px;
   }
+
+  @media (max-width: 576px) {
+    padding: 24px 16px;
+    margin: 0;
+    max-width: 100%;
+  }
 `;
 
 export const BrandTitle = styled.h1`
@@ -38,6 +48,10 @@ export const BrandTitle = styled.h1`
   font-weight: 600;
   margin-bottom: 8px;
   margin-top: 0;
+
+  @media (max-width: 576px) {
+    font-size: 24px;
+  }
 `;
 
 export const BrandSubTitle = styled.p`
@@ -45,6 +59,11 @@ export const BrandSubTitle = styled.p`
   font-size: 16px;
   margin-bottom: 32px;
   margin-top: 0;
+
+  @media (max-width: 576px) {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
 `;
 
 export const StyledForm = styled(Form)`

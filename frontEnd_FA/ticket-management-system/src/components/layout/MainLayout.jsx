@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Menu, message } from 'antd';
+import { Menu, message, Modal } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
   PlusCircleOutlined,
-  AppstoreOutlined
+  AppstoreOutlined,
+  MenuOutlined,
+  LogoutOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { logoutUser, getCurrentUser } from '../../services/authService';
@@ -16,12 +19,14 @@ import {
   UserAvatar,
   DashboardSider,
   DashboardContent,
-  LogoutIcon
+  MenuButton,
+  MobileOverlay
 } from './layout.styles';
 
 const MainLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Check if current user is admin
   const currentUser = getCurrentUser();
@@ -62,10 +67,25 @@ const MainLayout = ({ children }) => {
       icon: <AppstoreOutlined />,
       label: 'View My Tickets',
     }]),
+    // Logout button at the bottom
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      danger: true,
+      style: { marginTop: 'auto', color: '#ff4d4f' }
+    }
   ];
 
   const handleMenuClick = (e) => {
+    // Handle logout separately
+    if (e.key === 'logout') {
+      handleLogoutClick();
+      return;
+    }
+
     setSelectedKey(e.key);
+    setSidebarOpen(false); // Close sidebar on mobile after selection
     
     // Navigate to the selected page
     switch (e.key) {
@@ -86,18 +106,35 @@ const MainLayout = ({ children }) => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-      message.success('Logged out successfully');
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Even if API fails, clear local storage and redirect
-      localStorage.clear();
-      message.info('Logged out');
-      navigate('/login');
-    }
+  const handleLogoutClick = () => {
+    Modal.confirm({
+      title: 'Confirm Logout',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Are you sure you want to logout?',
+      okText: 'Logout',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await logoutUser();
+          message.success('Logged out successfully');
+          navigate('/login');
+        } catch (error) {
+          localStorage.clear();
+          message.info('Logged out');
+          navigate('/login');
+        }
+      }
+    });
+    setSidebarOpen(false);
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
   };
 
   const handleProfileClick = () => {
@@ -107,25 +144,31 @@ const MainLayout = ({ children }) => {
   return (
     <DashboardLayout>
       <DashboardHeader>
-        <LogoContainer>
-          <AppstoreOutlined className="logo-icon" />
-          <h1 className="logo-text">TicketFlow</h1>
-        </LogoContainer>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <MenuButton onClick={toggleSidebar}>
+            <MenuOutlined />
+          </MenuButton>
+          <LogoContainer>
+            <AppstoreOutlined className="logo-icon" />
+            <h1 className="logo-text">TicketFlow</h1>
+          </LogoContainer>
+        </div>
         
         <UserSection>
           <UserAvatar icon={<UserOutlined />} onClick={handleProfileClick} />
-          <LogoutIcon onClick={handleLogout} />
         </UserSection>
       </DashboardHeader>
 
       <DashboardLayout>
-        <DashboardSider width={200}>
+        {sidebarOpen && <MobileOverlay onClick={closeSidebar} />}
+        
+        <DashboardSider width={200} className={sidebarOpen ? 'open' : ''}>
           <Menu
             mode="inline"
             selectedKeys={[selectedKey]}
             items={menuItems}
             onClick={handleMenuClick}
-            style={{ height: '100%', paddingTop: '16px' }}
+            style={{ height: '100%', paddingTop: '16px', display: 'flex', flexDirection: 'column' }}
           />
         </DashboardSider>
 

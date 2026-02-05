@@ -17,12 +17,9 @@ export const loginUser = async (email, password) => {
       body: JSON.stringify({ email, password }),
     });
 
-    // Check if response is JSON
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
-      // Response is not JSON (likely CORS error or HTML error page)
       const text = await response.text();
-      console.error('Non-JSON response:', text);
       throw {
         status: response.status,
         message: 'Server returned an invalid response. Please check CORS configuration.',
@@ -43,7 +40,6 @@ export const loginUser = async (email, password) => {
 
     return data;
   } catch (error) {
-    // Handle network errors or JSON parsing errors
     if (error.message && error.message.includes('JSON')) {
       throw {
         status: 0,
@@ -64,24 +60,15 @@ export const loginUser = async (email, password) => {
  */
 export const registerUser = async (formData) => {
   try {
-    console.log('=== REGISTER USER SERVICE ===');
-    console.log('Sending registration request...');
-    
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
-      body: formData, // FormData automatically sets Content-Type to multipart/form-data
-      // NO headers - browser sets Content-Type automatically for FormData
+      body: formData,
     });
 
-    console.log('Response status:', response.status);
-    console.log('Response OK:', response.ok);
-
     const contentType = response.headers.get('content-type');
-    console.log('Content-Type:', contentType);
     
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      console.error('Non-JSON response:', text);
       throw {
         status: response.status,
         message: 'Server returned an invalid response',
@@ -90,14 +77,8 @@ export const registerUser = async (formData) => {
     }
 
     const data = await response.json();
-    console.log('Response data:', data);
 
     if (!response.ok) {
-      console.error('Registration failed');
-      console.error('  - Status:', response.status);
-      console.error('  - Message:', data.message);
-      console.error('  - Field errors:', data.fieldErrors);
-      
       throw {
         status: response.status,
         message: data.message || 'Registration failed',
@@ -106,11 +87,8 @@ export const registerUser = async (formData) => {
       };
     }
 
-    console.log('Registration successful!');
     return data;
   } catch (error) {
-    console.error('=== REGISTER USER ERROR ===');
-    console.error('Error:', error);
     throw error;
   }
 };
@@ -183,7 +161,6 @@ export const getCurrentUser = () => {
  */
 export const getMyProfile = async () => {
   try {
-    console.log('Fetching my profile...');
     const response = await fetch(`${API_BASE_URL}/profile/me`, {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -209,10 +186,8 @@ export const getMyProfile = async () => {
       };
     }
 
-    console.log('My profile fetched:', data);
     return data;
   } catch (error) {
-    console.error('Get my profile error:', error);
     throw error;
   }
 };
@@ -224,14 +199,12 @@ export const getMyProfile = async () => {
  */
 export const updateMyProfile = async (formData) => {
   try {
-    console.log('Updating my profile...');
     const token = localStorage.getItem('token');
     
     const response = await fetch(`${API_BASE_URL}/profile`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${token}`,
-        // Don't set Content-Type - browser will set it with boundary for FormData
       },
       body: formData,
     });
@@ -256,17 +229,13 @@ export const updateMyProfile = async (formData) => {
         data
       };
     }
-
-    console.log('Profile updated successfully:', data);
     
-    // Update localStorage with new username if changed
     if (data.username) {
       localStorage.setItem('username', data.username);
     }
     
     return data;
   } catch (error) {
-    console.error('Update profile error:', error);
     throw error;
   }
 };
@@ -279,7 +248,6 @@ export const updateMyProfile = async (formData) => {
  */
 export const changePassword = async (oldPassword, newPassword) => {
   try {
-    console.log('Changing password...');
     const response = await fetch(`${API_BASE_URL}/profile/password`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
@@ -307,10 +275,8 @@ export const changePassword = async (oldPassword, newPassword) => {
       };
     }
 
-    console.log('Password changed successfully');
     return data;
   } catch (error) {
-    console.error('Change password error:', error);
     throw error;
   }
 };
@@ -348,7 +314,6 @@ export const getAllUsers = async () => {
 
     return data;
   } catch (error) {
-    console.error('Get users error:', error);
     throw error;
   }
 };
@@ -360,7 +325,6 @@ export const getAllUsers = async () => {
  */
 export const getUserById = async (userId) => {
   try {
-    console.log(`Fetching user details for ID: ${userId}`);
     const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
       method: 'GET',
       headers: getAuthHeaders(),
@@ -386,10 +350,8 @@ export const getUserById = async (userId) => {
       };
     }
 
-    console.log('User details fetched:', data);
     return data;
   } catch (error) {
-    console.error('Get user by ID error:', error);
     throw error;
   }
 };
@@ -402,7 +364,6 @@ export const getUserById = async (userId) => {
  */
 export const updateUserStatus = async (userId, status) => {
   try {
-    console.log(`Updating user ${userId} status to ${status}`);
     const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
@@ -429,10 +390,8 @@ export const updateUserStatus = async (userId, status) => {
       };
     }
 
-    console.log('User status updated successfully');
     return data;
   } catch (error) {
-    console.error('Update user status error:', error);
     throw error;
   }
 };
@@ -444,7 +403,6 @@ export const updateUserStatus = async (userId, status) => {
  */
 export const deleteUser = async (userId) => {
   try {
-    console.log(`Deleting user ${userId}`);
     const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
@@ -467,10 +425,8 @@ export const deleteUser = async (userId) => {
       }
     }
 
-    console.log('User deleted successfully');
     return { success: true };
   } catch (error) {
-    console.error('Delete user error:', error);
     throw error;
   }
 };

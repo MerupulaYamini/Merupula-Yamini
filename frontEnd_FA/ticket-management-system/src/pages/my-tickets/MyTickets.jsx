@@ -62,7 +62,6 @@ const MyTickets = () => {
 
       const data = await getMyTickets(params);
       
-      // Map backend data to frontend format
       const mappedTickets = data.content.map(ticket => ({
         id: ticket.id,
         title: ticket.title,
@@ -84,7 +83,6 @@ const MyTickets = () => {
         totalPages: data.totalPages
       });
     } catch (error) {
-      console.error('Failed to fetch my tickets:', error);
       message.error(error.message || 'Failed to load my tickets');
     } finally {
       setLoading(false);
@@ -102,13 +100,11 @@ const MyTickets = () => {
 
   const handleStatusFilterChange = (e) => {
     setStatusFilter(e.target.value);
-    // Filter locally since API doesn't support filters for my-tickets
     setPagination(prev => ({ ...prev, page: 0 }));
   };
 
   const handleLabelFilterChange = (e) => {
     setLabelFilter(e.target.value);
-    // Filter locally since API doesn't support filters for my-tickets
     setPagination(prev => ({ ...prev, page: 0 }));
   };
 

@@ -1,9 +1,21 @@
 import styled from 'styled-components';
 import { Button, Avatar } from 'antd';
 
+// Breakpoints
+const breakpoints = {
+  mobile: '576px',
+  tablet: '768px',
+  desktop: '992px',
+  large: '1200px'
+};
+
 export const TicketDetailsContainer = styled.div`
   max-width: 1200px;
   margin: 0 auto;
+
+  @media (max-width: ${breakpoints.large}) {
+    max-width: 100%;
+  }
 `;
 
 export const TicketHeader = styled.div`
@@ -14,7 +26,7 @@ export const TicketHeader = styled.div`
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.tablet}) {
     flex-direction: column;
     gap: 16px;
   }
@@ -41,6 +53,14 @@ export const TicketTitle = styled.h1`
   font-weight: 600;
   margin: 0 0 8px 0;
   line-height: 1.2;
+
+  @media (max-width: ${breakpoints.tablet}) {
+    font-size: 24px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 20px;
+  }
 `;
 
 export const TicketId = styled.span`
@@ -48,15 +68,28 @@ export const TicketId = styled.span`
   font-weight: 600;
   color: #8c8c8c;
   font-size: 14px;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    font-size: 12px;
+  }
 `;
 
 export const ActionButtons = styled.div`
   display: flex;
   gap: 12px;
   
-  @media (max-width: 768px) {
+  @media (max-width: ${breakpoints.tablet}) {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+      justify-content: center;
+    }
   }
 `;
 
@@ -98,14 +131,18 @@ export const TicketContent = styled.div`
   gap: 32px;
   max-width: 100%;
   
-  @media (max-width: 1200px) {
+  @media (max-width: ${breakpoints.large}) {
     grid-template-columns: 350px 1fr;
     gap: 24px;
   }
   
-  @media (max-width: 968px) {
+  @media (max-width: ${breakpoints.desktop}) {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 20px;
+  }
+  
+  @media (max-width: ${breakpoints.mobile}) {
+    gap: 16px;
   }
 `;
 
@@ -135,6 +172,14 @@ export const InfoSection = styled.div`
     border-color: #1890ff;
     box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
   }
+
+  @media (max-width: ${breakpoints.tablet}) {
+    padding: 20px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 16px;
+  }
 `;
 
 export const UpdateStatusSection = styled.div`
@@ -149,6 +194,14 @@ export const UpdateStatusSection = styled.div`
   &:hover {
     border-color: #1890ff;
     box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+  }
+
+  @media (max-width: ${breakpoints.tablet}) {
+    padding: 20px;
+  }
+
+  @media (max-width: ${breakpoints.mobile}) {
+    padding: 16px;
   }
 `;
 

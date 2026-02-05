@@ -40,28 +40,19 @@ const EditTicket = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      console.log('Fetching ticket and users...');
-      // Fetch ticket and users in parallel
       const [ticketData, usersData] = await Promise.all([
         getTicketById(ticketId),
         getAllUsers()
       ]);
       
-      console.log('Ticket data:', ticketData);
-      console.log('Users data:', usersData);
-      
       setTicket(ticketData);
       setUsers(usersData);
       
-      // Pre-fill form
       setTitle(ticketData.title || '');
       setDescription(ticketData.description || '');
       setLabel(ticketData.label || '');
       setAssignedToUserId(ticketData.assignedToId ? String(ticketData.assignedToId) : '');
-      
-      console.log('Users state set to:', usersData);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
       message.error(error.message || 'Failed to load data');
     } finally {
       setLoading(false);
@@ -70,76 +61,46 @@ const EditTicket = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    console.log('=== SAVE BUTTON CLICKED ===');
-    console.log('1. Current form values:', { title, description, label, assignedToUserId });
-    console.log('2. Original ticket values:', { 
-      title: ticket.title, 
-      description: ticket.description, 
-      label: ticket.label, 
-      assignedToId: ticket.assignedToId 
-    });
     
     if (!title.trim()) {
-      console.log('ERROR: Title is empty');
       message.error('Title is required');
       return;
     }
 
     if (title.length > 150) {
-      console.log('ERROR: Title too long:', title.length);
       message.error('Title cannot exceed 150 characters');
       return;
     }
 
-    console.log('3. Building updates object...');
     setSaving(true);
     try {
-      // Build update object with only changed fields
       const updates = {};
       if (title !== ticket.title) {
-        console.log('   - Title changed:', ticket.title, '->', title);
         updates.title = title;
       }
       if (description !== ticket.description) {
-        console.log('   - Description changed');
         updates.description = description;
       }
       if (label !== ticket.label) {
-        console.log('   - Label changed:', ticket.label, '->', label);
         updates.label = label;
       }
       if (assignedToUserId && String(assignedToUserId) !== String(ticket.assignedToId)) {
-        console.log('   - Assigned user changed:', ticket.assignedToId, '->', assignedToUserId);
         updates.assignedToUserId = parseInt(assignedToUserId);
       }
 
-      console.log('4. Final updates object:', updates);
-      console.log('5. Number of changes:', Object.keys(updates).length);
-
       if (Object.keys(updates).length === 0) {
-        console.log('WARNING: No changes detected');
         message.info('No changes to save');
         navigate(`/ticket/${ticketId}`);
         return;
       }
-
-      console.log('6. Calling updateTicket API...');
-      console.log('   - Ticket ID:', ticketId);
-      console.log('   - Updates:', JSON.stringify(updates, null, 2));
       
       const result = await updateTicket(ticketId, updates);
-      
-      console.log('7. API Response:', result);
-      console.log('SUCCESS: Ticket updated!');
       message.success('Ticket updated successfully!');
       navigate(`/ticket/${ticketId}`);
     } catch (error) {
-      console.error('ERROR: Update failed');
-      console.error('Error details:', error);
       message.error(error.message || 'Failed to update ticket');
     } finally {
       setSaving(false);
-      console.log('=== SAVE PROCESS COMPLETE ===');
     }
   };
 
@@ -166,9 +127,6 @@ const EditTicket = () => {
       </MainLayout>
     );
   }
-
-  console.log('Rendering with users:', users);
-  console.log('Users array length:', users.length);
 
   return (
     <MainLayout>

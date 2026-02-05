@@ -77,11 +77,6 @@ const Register = () => {
   };
 
   const onFinish = async (values) => {
-    console.log('=== REGISTER FORM SUBMITTED ===');
-    console.log('Form values:', values);
-    console.log('Selected file:', selectedFile);
-    
-    // Validation
     if (!selectedFile) {
       message.error('Profile picture is required');
       return;
@@ -90,56 +85,29 @@ const Register = () => {
     setLoading(true);
     
     try {
-      // Create FormData for multipart/form-data
       const formData = new FormData();
-      
-      console.log('Building FormData...');
       formData.append('username', values.username);
-      console.log('  - username:', values.username);
-      
       formData.append('email', values.email);
-      console.log('  - email:', values.email);
-      
       formData.append('password', values.password);
-      console.log('  - password:', '***hidden***');
       
       if (values.bio) {
         formData.append('bio', values.bio);
-        console.log('  - bio:', values.bio);
       }
       
-      // IMPORTANT: Backend expects 'profilePicture' not 'displayPicture'
       formData.append('profilePicture', selectedFile);
-      console.log('  - profilePicture:', selectedFile.name, `(${selectedFile.size} bytes)`);
       
-      console.log('Calling register API...');
       const response = await registerUser(formData);
-      console.log('Registration API response:', response);
-      console.log('User created with ID:', response.id);
-      console.log('User status:', response.status);
-      console.log('User email:', response.email);
-      console.log('User username:', response.username);
-      
       message.success('Registration submitted! Pending administrator approval.');
       form.resetFields();
       setSelectedFile(null);
       
-      // Navigate to login page after 2 seconds
       setTimeout(() => {
         navigate('/login');
       }, 2000);
       
     } catch (error) {
-      console.error('=== REGISTRATION ERROR ===');
-      console.error('Error object:', error);
-      console.error('Status:', error.status);
-      console.error('Message:', error.message);
-      console.error('Field errors:', error.fieldErrors);
-      
-      // Show field-specific errors
       if (error.fieldErrors) {
         Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
-          console.error(`  - ${field}: ${errorMsg}`);
           message.error(`${field}: ${errorMsg}`);
         });
       } else {
@@ -147,12 +115,10 @@ const Register = () => {
       }
     } finally {
       setLoading(false);
-      console.log('=== REGISTRATION PROCESS COMPLETE ===');
     }
   };
 
   const onFinishFailed = (errorInfo) => {
-    console.log('Failed:', errorInfo);
   };
 
   const getStrengthText = (strength) => {

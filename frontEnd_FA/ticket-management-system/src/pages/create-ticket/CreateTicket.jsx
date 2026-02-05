@@ -41,22 +41,14 @@ const CreateTicket = () => {
   const [files, setFiles] = useState([]);
 
   useEffect(() => {
-    console.log('=== CREATE TICKET: Component Mounted ===');
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
-    console.log('=== FETCHING USERS ===');
     try {
       const usersData = await getAllUsers();
-      console.log('Users fetched successfully:', usersData);
-      console.log('Number of users:', usersData.length);
       setUsers(usersData);
     } catch (error) {
-      console.error('Failed to fetch users:', error);
-      console.error('Error status:', error.status);
-      console.error('Error message:', error.message);
-      
       if (error.status === 403) {
         message.error('Access denied. Only admins can create tickets.');
       } else {
@@ -86,28 +78,19 @@ const CreateTicket = () => {
   };
 
   const handleFileSelect = (e) => {
-    console.log('=== FILE SELECT EVENT ===');
     const selectedFiles = Array.from(e.target.files);
-    console.log('Selected files:', selectedFiles);
-    console.log('Number of files:', selectedFiles.length);
     
     if (selectedFiles.length === 0) {
-      console.log('No files selected');
       return;
     }
 
     try {
-      // Validate new files
       const allFiles = [...files, ...selectedFiles];
-      console.log('All files (existing + new):', allFiles);
       validateFiles(allFiles);
       
-      console.log('Validation passed, updating state');
       setFiles(allFiles);
-      console.log('Files state updated');
-      e.target.value = ''; // Reset input
+      e.target.value = '';
     } catch (error) {
-      console.error('File validation error:', error);
       message.error(error.message);
       e.target.value = '';
     }
@@ -156,48 +139,32 @@ const CreateTicket = () => {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    console.log('=== CREATE TICKET BUTTON CLICKED ===');
-    
-    // Validation
-    console.log('1. Validating form fields...');
-    console.log('   - Title:', title);
-    console.log('   - Description:', description);
-    console.log('   - Label:', label);
-    console.log('   - Assigned User ID:', assignedToUserId);
-    console.log('   - Files:', files);
-    console.log('   - Attachment URLs:', attachmentUrls);
     
     if (!title.trim()) {
-      console.log('ERROR: Title is empty');
       message.error('Title is required');
       return;
     }
     
     if (title.length > 150) {
-      console.log('ERROR: Title too long:', title.length);
       message.error('Title cannot exceed 150 characters');
       return;
     }
     
     if (!description.trim()) {
-      console.log('ERROR: Description is empty');
       message.error('Description is required');
       return;
     }
     
     if (!label) {
-      console.log('ERROR: Label not selected');
       message.error('Label is required');
       return;
     }
     
     if (!assignedToUserId) {
-      console.log('ERROR: Assigned user not selected');
       message.error('Assigned user is required');
       return;
     }
 
-    console.log('2. All validations passed');
     setLoading(true);
     
     try {
@@ -209,32 +176,13 @@ const CreateTicket = () => {
         attachments: files,
         attachmentUrls
       };
-
-      console.log('3. Ticket data prepared:');
-      console.log('   - Title:', ticketData.title);
-      console.log('   - Description length:', ticketData.description.length);
-      console.log('   - Label:', ticketData.label);
-      console.log('   - Assigned User ID:', ticketData.assignedToUserId);
-      console.log('   - Number of files:', ticketData.attachments.length);
-      console.log('   - Number of URLs:', ticketData.attachmentUrls.length);
       
-      console.log('4. Calling createTicket API...');
       const result = await createTicket(ticketData);
-      
-      console.log('5. SUCCESS! Ticket created:', result);
       message.success('Ticket created successfully!');
       navigate('/dashboard');
     } catch (error) {
-      console.error('6. ERROR: Create ticket failed');
-      console.error('   - Error object:', error);
-      console.error('   - Status:', error.status);
-      console.error('   - Message:', error.message);
-      console.error('   - Field errors:', error.fieldErrors);
-      
-      // Handle field errors
       if (error.fieldErrors) {
         Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
-          console.error(`   - Field error [${field}]:`, errorMsg);
           message.error(`${field}: ${errorMsg}`);
         });
       } else {
@@ -242,7 +190,6 @@ const CreateTicket = () => {
       }
     } finally {
       setLoading(false);
-      console.log('=== CREATE TICKET PROCESS COMPLETE ===');
     }
   };
 

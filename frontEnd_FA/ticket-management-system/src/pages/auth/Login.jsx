@@ -24,12 +24,11 @@ const Login = () => {
 
   const onFinish = async (values) => {
     setLoading(true);
-    setErrorMessage(''); // Clear previous errors
+    setErrorMessage('');
     
     try {
       const data = await loginUser(values.email, values.password);
       
-      // Success - store token and user info
       localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.userId);
       localStorage.setItem('username', data.username);
@@ -37,12 +36,8 @@ const Login = () => {
       localStorage.setItem('roles', JSON.stringify(data.roles));
       
       message.success('Login successful! Welcome back.');
-      
-      // Navigate to dashboard
       navigate('/dashboard');
     } catch (error) {
-      console.error('Login error:', error);
-      
       if (error.message) {
         setErrorMessage(error.message);
       } else if (error.fieldErrors) {
@@ -57,7 +52,6 @@ const Login = () => {
   };
 
   const onFinishFailed = (errorInfo) => {
-    console.log('Form validation failed:', errorInfo);
     setErrorMessage('Please fill in all required fields correctly.');
   };
 
