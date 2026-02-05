@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateUserStatusRequest {
     @NotNull(message = "Status is required")
-    private UserStatus status; // ACTIVE or DECLINED
-}
+    private UserStatus status; // ACTIVE (to approve)
+ }

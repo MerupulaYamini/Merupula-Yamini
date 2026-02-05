@@ -5,5 +5,5 @@ public enum TicketLabel {
     FEATURE,
     TASK,
     IMPROVEMENT,
-    SUPPORT_REQUEST
+    SUPPORT
 }

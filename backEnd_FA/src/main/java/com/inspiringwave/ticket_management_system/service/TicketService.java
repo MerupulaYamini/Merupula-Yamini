@@ -14,11 +14,10 @@ public interface TicketService {
 
     // Admin + Employee: list with backend filter/search/sort via Pageable + specs
     Page<TicketListResponse> getAllTickets(String search,
-                                           String status,
-                                           String label,
-                                           Long assignedToId,
-                                           Pageable pageable
-    );
+            String status,
+            String label,
+            Long assignedToId,
+            Pageable pageable);
 
     // Admin + Employee: view details of any ticket
     TicketDetailsResponse getTicketById(Long ticketId);

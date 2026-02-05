@@ -27,8 +27,7 @@ public class AttachmentController {
     @GetMapping("/{ticketId}/attachments/{index}")
     public ResponseEntity<byte[]> downloadAttachment(
             @PathVariable Long ticketId,
-            @PathVariable int index
-    ) {
+            @PathVariable int index) {
         User current = getCurrentUser();
 
         Ticket ticket = ticketRepository.findById(ticketId)
@@ -54,8 +53,10 @@ public class AttachmentController {
 
         if (meta != null && meta.contains("|")) {
             String[] parts = meta.split("\\|", 2);
-            if (parts.length > 0 && parts[0] != null && !parts[0].isBlank()) filename = parts[0];
-            if (parts.length > 1 && parts[1] != null && !parts[1].isBlank()) contentType = parts[1];
+            if (parts.length > 0 && parts[0] != null && !parts[0].isBlank())
+                filename = parts[0];
+            if (parts.length > 1 && parts[1] != null && !parts[1].isBlank())
+                contentType = parts[1];
         }
 
         return ResponseEntity.ok()
@@ -75,7 +76,7 @@ public class AttachmentController {
     }
 
     private boolean isAdmin(User user) {
-        return user.getRoles().contains(Role.ADMIN);
+        return user.getRole() == Role.ADMIN;
     }
 
     private void ensureAdminOrAssigned(User user, Ticket ticket) {

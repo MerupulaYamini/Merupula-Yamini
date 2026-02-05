@@ -12,6 +12,6 @@ public interface UserMapper {
     UserResponse toUserResponse(User user);
 
     // EXPLICIT mapping for roles
-    @Mapping(target = "roles", expression = "java(user.getRoles())")
+    @Mapping(target = "roles", expression = "java(java.util.Set.of(user.getRole()))")
     UserDetailsResponse toUserDetailsResponse(User user);
 }

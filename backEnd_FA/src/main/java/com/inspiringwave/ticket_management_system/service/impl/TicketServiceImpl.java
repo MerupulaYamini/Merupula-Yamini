@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Service
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
@@ -44,8 +43,7 @@ public class TicketServiceImpl implements TicketService {
     private final TicketStatusHistoryRepository statusHistoryRepository;
     private final TicketMapper ticketMapper;
 
-
-//    Helpers
+    // Helpers
     private User getCurrentUser() {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -59,7 +57,7 @@ public class TicketServiceImpl implements TicketService {
 
     private boolean isAdmin(User user) {
 
-        return user.getRoles() != null && user.getRoles().contains(Role.ADMIN);
+        return user.getRole() == Role.ADMIN;
     }
 
     private void ensureAdmin(User user) {
@@ -69,23 +67,24 @@ public class TicketServiceImpl implements TicketService {
     }
 
     private void ensureAdminOrAssigned(User user, Ticket ticket) {
-        if (!isAdmin(user) && (ticket.getAssignedTo() == null || !ticket.getAssignedTo().getId().equals(user.getId()))) {
+        if (!isAdmin(user)
+                && (ticket.getAssignedTo() == null || !ticket.getAssignedTo().getId().equals(user.getId()))) {
             throw new UnauthorizedException("You are not allowed to update this ticket");
         }
     }
 
-    private Ticket getTicketOrThrow(Long ticketId){
+    private Ticket getTicketOrThrow(Long ticketId) {
         return ticketRepository.findById(ticketId)
-                .orElseThrow(()-> new ResourceNotFoundException("Ticket not found:" + ticketId));
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found:" + ticketId));
     }
-//    Service Methods
+
+    // Service Methods
     @Override
     public Page<TicketListResponse> getAllTickets(String search,
-                                                  String status,
-                                                  String label,
-                                                  Long assignedToId,
-                                                  Pageable pageable
-    ) {
+            String status,
+            String label,
+            Long assignedToId,
+            Pageable pageable) {
         // Admin + Employee both can view all -> just require auth
         getCurrentUser();
 
@@ -95,6 +94,7 @@ public class TicketServiceImpl implements TicketService {
                 .map(ticketMapper::toListResponse);
 
     }
+
     // Ticket Details
     @Override
     public TicketDetailsResponse getTicketById(Long ticketId) {
@@ -105,6 +105,7 @@ public class TicketServiceImpl implements TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
         return ticketMapper.toDetailsResponse(ticket);
     }
+
     // Create(Admin only)
     @Transactional
     @Override
@@ -114,8 +115,8 @@ public class TicketServiceImpl implements TicketService {
         ensureAdmin(admin);
 
         User assigned = userRepository.findById(request.getAssignedToUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("Assigned employee not found: "+request.getAssignedToUserId()));
-
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Assigned employee not found: " + request.getAssignedToUserId()));
 
         // attachments(bytes+meta)
         List<byte[]> attachmentData = new ArrayList<>();
@@ -123,7 +124,8 @@ public class TicketServiceImpl implements TicketService {
 
         if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
             for (MultipartFile file : request.getAttachments()) {
-                if (file == null || file.isEmpty()) continue;
+                if (file == null || file.isEmpty())
+                    continue;
 
                 try {
                     attachmentData.add(file.getBytes());
@@ -141,7 +143,6 @@ public class TicketServiceImpl implements TicketService {
         List<String> attachmentUrls = (request.getAttachmentUrls() == null)
                 ? new ArrayList<>()
                 : request.getAttachmentUrls();
-
 
         Ticket ticket = Ticket.builder()
                 .title(request.getTitle())
@@ -164,8 +165,7 @@ public class TicketServiceImpl implements TicketService {
                         .fromStatus(TicketStatus.TODO)
                         .toStatus(TicketStatus.TODO)
                         .updatedBy(admin)
-                        .build()
-        );
+                        .build());
         // reload so statusHistory appears in response immediately
         Ticket fresh = getTicketOrThrow(saved.getId());
         return ticketMapper.toDetailsResponse(saved);
@@ -181,16 +181,18 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found: " + ticketId));
 
-        if (request.getTitle() != null) ticket.setTitle(request.getTitle());
-        if (request.getDescription() != null) ticket.setDescription(request.getDescription());
-        if (request.getLabel() != null) ticket.setLabel(request.getLabel());
+        if (request.getTitle() != null)
+            ticket.setTitle(request.getTitle());
+        if (request.getDescription() != null)
+            ticket.setDescription(request.getDescription());
+        if (request.getLabel() != null)
+            ticket.setLabel(request.getLabel());
 
         // only admin can assign/reassign - already ensured by ensureAdmin(admin)
         if (request.getAssignedToUserId() != null) {
             User newAssigned = userRepository.findById(request.getAssignedToUserId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Assigned employee not found: " + request.getAssignedToUserId()
-                    ));
+                            "Assigned employee not found: " + request.getAssignedToUserId()));
             ticket.setAssignedTo(newAssigned);
         }
 

@@ -41,7 +41,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     private boolean isAdmin(User user) {
-        return user.getRoles().contains(Role.ADMIN);
+        return user.getRole() == Role.ADMIN;
     }
 
     private void ensureAdminOrAssigned(User user, Ticket ticket) {
@@ -67,8 +67,7 @@ public class CommentServiceImpl implements CommentService {
                         .ticket(ticket)
                         .author(current)
                         .content(request.getContent())
-                        .build()
-        );
+                        .build());
 
         // reload so comments appear immediately
         Ticket fresh = ticketRepository.findById(ticketId)

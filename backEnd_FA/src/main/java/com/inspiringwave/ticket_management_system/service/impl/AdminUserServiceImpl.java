@@ -5,6 +5,7 @@ import com.inspiringwave.ticket_management_system.dto.request.admin.UpdateUserSt
 import com.inspiringwave.ticket_management_system.dto.response.common.ApiResponse;
 import com.inspiringwave.ticket_management_system.dto.response.user.UserDetailsResponse;
 import com.inspiringwave.ticket_management_system.dto.response.user.UserResponse;
+import com.inspiringwave.ticket_management_system.repository.TicketRepository;
 import com.inspiringwave.ticket_management_system.entity.User;
 import com.inspiringwave.ticket_management_system.entity.enums.Role;
 import com.inspiringwave.ticket_management_system.entity.enums.UserStatus;
@@ -27,6 +28,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final TicketRepository ticketRepository; // ← ADD THIS
 
     @Override
     public List<UserResponse> getAllUsers() {
@@ -51,13 +53,17 @@ public class AdminUserServiceImpl implements AdminUserService {
         return userMapper.toUserDetailsResponse(user);
     }
 
-
     @Override
     @Transactional
     public ApiResponse approveOrDecline(Long userId, UpdateUserStatusRequest request) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        long ticketCount = ticketRepository.countByCreatedByOrAssignedTo(user, user);
+        if (ticketCount > 0) {
+            throw new BadRequestException("Cannot delete user. User has " + ticketCount + " associated tickets.");
+        }
 
         UserStatus status = request.getStatus();
         if (status == null) {
@@ -69,15 +75,16 @@ public class AdminUserServiceImpl implements AdminUserService {
             throw new BadRequestException("Only PENDING users can be approved/declined");
         }
 
-        // DECLINE = delete user fully (no rejected table)
-        if (status == UserStatus.DECLINED) {
-            userRepository.delete(user);
-
-            return ApiResponse.builder()
-                    .success(true)
-                    .message("Registration rejected. The user account has been removed and can register again.")
-                    .build();
-        }
+        // // DECLINE = delete user fully (no rejected table)
+        // if (status == UserStatus.DECLINED) {
+        // userRepository.delete(user);
+        //
+        // return ApiResponse.builder()
+        // .success(true)
+        // .message("Registration rejected. The user account has been removed and can
+        // register again.")
+        // .build();
+        // }
 
         // APPROVE
         if (status == UserStatus.ACTIVE) {
@@ -90,9 +97,9 @@ public class AdminUserServiceImpl implements AdminUserService {
                     .build();
         }
 
-        throw new BadRequestException("Invalid status for approval flow. Use ACTIVE or DECLINED.");
+        throw new BadRequestException(
+                "Invalid status for approval flow. Use ACTIVE to approve, or send a DELETE request to decline.");
     }
-
 
     @Override
     @Transactional
@@ -110,26 +117,21 @@ public class AdminUserServiceImpl implements AdminUserService {
             throw new BadRequestException("User must be ACTIVE to change role");
         }
 
-        // Only allow promotion to ADMIN
-        if (request.getRole() != Role.ADMIN) {
-            throw new BadRequestException("Only promotion to ADMIN is allowed");
-        }
-
-        // Already admin
-        if (user.getRoles() != null && user.getRoles().contains(Role.ADMIN)) {
+        // Check if already has the same role
+        if (user.getRole() == request.getRole()) {
             return ApiResponse.builder()
                     .success(true)
-                    .message("User is already an ADMIN")
+                    .message("User already has role: " + request.getRole())
                     .build();
         }
 
-        // Keep EMPLOYEE role as well (recommended)
-        user.setRoles(new HashSet<>(Set.of(Role.ADMIN, Role.EMPLOYEE)));
+        // Update to new role (replaces old role completely)
+        user.setRole(request.getRole());
         userRepository.save(user);
 
         return ApiResponse.builder()
                 .success(true)
-                .message("User promoted to ADMIN successfully")
+                .message("User role updated to " + request.getRole() + " successfully")
                 .build();
     }
 
@@ -139,12 +141,15 @@ public class AdminUserServiceImpl implements AdminUserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
-        // Only Employees can be removed
-        boolean isEmployeeOnly = user.getRoles() != null
-                && user.getRoles().contains(Role.EMPLOYEE)
-                && !user.getRoles().contains(Role.ADMIN);
+        long ticketCount = ticketRepository.countByCreatedByOrAssignedTo(user, user);
+        if (ticketCount > 0) {
+            throw new BadRequestException("Cannot delete employee. Employee has " + ticketCount
+                    + " associated tickets. Please reassign or delete tickets first.");
+        }
 
-        if (!isEmployeeOnly) {
+        // Only Employees can be removed
+        // Only Employees can be removed
+        if (user.getRole() != Role.EMPLOYEE) {
             throw new BadRequestException("Only employees can be removed");
         }
 

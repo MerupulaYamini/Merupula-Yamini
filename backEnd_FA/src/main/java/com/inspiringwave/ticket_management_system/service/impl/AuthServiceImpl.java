@@ -35,7 +35,6 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public RegisterResponse register(RegisterRequest request) {
 
-
         // If user already exists -> reject
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email already exists");
@@ -62,11 +61,10 @@ public class AuthServiceImpl implements AuthService {
                 .profilePictureName(pic.getOriginalFilename())
                 .profilePictureType(pic.getContentType())
                 .status(UserStatus.PENDING)
-                .roles(Set.of(Role.EMPLOYEE))
+                .role(Role.EMPLOYEE)
                 .build();
 
         User saved = userRepository.save(user);
-
 
         RegisterResponse response = authMapper.toRegisterResponse(saved);
         response.setMessage("Registration successful. Waiting for admin approval.");
@@ -104,7 +102,7 @@ public class AuthServiceImpl implements AuthService {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .roles(user.getRoles())
+                .roles(Set.of(user.getRole()))
                 .build();
     }
 
