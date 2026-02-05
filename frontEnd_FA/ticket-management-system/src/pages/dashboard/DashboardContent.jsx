@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { message, Input, Avatar } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { message } from 'antd';
 import {
   PlusCircleOutlined,
   SearchOutlined,
@@ -7,6 +7,7 @@ import {
   EyeOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { getAllTickets, deleteTicket, mapStatus, mapLabel } from '../../services/ticketService';
 import {
   PageTitle,
   PageSubtitle,
@@ -45,7 +46,23 @@ import {
 
 const DashboardContent = () => {
   const navigate = useNavigate();
-  // Mock data for pending registrations
+  
+  // State for tickets
+  const [tickets, setTickets] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState({
+    page: 0,
+    size: 10,
+    totalElements: 0,
+    totalPages: 0
+  });
+  
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [labelFilter, setLabelFilter] = useState('All');
+  
+  // Mock data for pending registrations (keep this as is for now)
   const [pendingUsers, setPendingUsers] = useState([
     {
       id: 1,
@@ -67,71 +84,81 @@ const DashboardContent = () => {
     }
   ]);
 
-  // Mock data for tickets
-  const [tickets, setTickets] = useState([
-    {
-      id: 'TKT-001',
-      title: 'Implement user authentication',
-      label: 'New Feature',
-      labelType: 'new-feature',
-      status: 'In Progress',
-      statusType: 'in-progress',
-      assignedTo: 'Alice Johnson',
-      createdBy: 'Admin User'
-    },
-    {
-      id: 'TKT-002',
-      title: 'Fix database connection issue',
-      label: 'Bug',
-      labelType: 'bug',
-      status: 'Todo',
-      statusType: 'todo',
-      assignedTo: 'Bob Williams',
-      createdBy: 'Alice Johnson'
-    },
-    {
-      id: 'TKT-003',
-      title: 'Refactor ticket detail page component',
-      label: 'Improvement',
-      labelType: 'improvement',
-      status: 'Review',
-      statusType: 'review',
-      assignedTo: 'Charlie Brown',
-      createdBy: 'Admin User'
-    },
-    {
-      id: 'TKT-004',
-      title: 'Add file upload support in comments',
-      label: 'New Feature',
-      labelType: 'new-feature',
-      status: 'Ready To Deploy',
-      statusType: 'ready-to-deploy',
-      assignedTo: 'Alice Johnson',
-      createdBy: 'Bob Williams'
+  // Fetch tickets from API
+  const fetchTickets = async () => {
+    setLoading(true);
+    try {
+      const params = {
+        page: pagination.page,
+        size: pagination.size,
+        sort: 'createdAt,desc'
+      };
+
+      // Add filters if set
+      if (searchTerm) params.search = searchTerm;
+      if (statusFilter !== 'All') params.status = statusFilter;
+      if (labelFilter !== 'All') params.label = labelFilter;
+
+      const data = await getAllTickets(params);
+      
+      // Map backend data to frontend format
+      const mappedTickets = data.content.map(ticket => ({
+        id: ticket.id,
+        title: ticket.title,
+        label: ticket.label,
+        labelType: mapLabel(ticket.label),
+        status: ticket.status,
+        statusType: mapStatus(ticket.status),
+        assignedTo: ticket.assignedToName || 'Unassigned',
+        createdBy: ticket.createdByName || 'Unknown',
+        createdAt: ticket.createdAt,
+        updatedAt: ticket.updatedAt
+      }));
+
+      setTickets(mappedTickets);
+      setPagination({
+        page: data.pageable.pageNumber,
+        size: data.pageable.pageSize,
+        totalElements: data.totalElements,
+        totalPages: data.totalPages
+      });
+    } catch (error) {
+      console.error('Failed to fetch tickets:', error);
+      message.error(error.message || 'Failed to load tickets');
+    } finally {
+      setLoading(false);
     }
-  ]);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [labelFilter, setLabelFilter] = useState('All');
-
-  const handleAccept = (userId) => {
-    setPendingUsers(users => users.filter(user => user.id !== userId));
-    message.success('User registration accepted');
   };
 
-  const handleDecline = (userId) => {
-    setPendingUsers(users => users.filter(user => user.id !== userId));
-    message.success('User registration declined');
-  };
+  // Fetch tickets on component mount and when filters change
+  useEffect(() => {
+    fetchTickets();
+  }, [pagination.page, statusFilter, labelFilter]);
+
+  // Handle search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchTerm !== undefined) {
+        fetchTickets();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const handleCreateTicket = () => {
-    message.info('Create ticket functionality will be implemented with API');
+    navigate('/create-ticket');
   };
 
-  const handleDeleteTicket = (ticketId) => {
-    setTickets(tickets => tickets.filter(ticket => ticket.id !== ticketId));
-    message.success('Ticket deleted successfully');
+  const handleDeleteTicket = async (ticketId) => {
+    try {
+      await deleteTicket(ticketId);
+      message.success('Ticket deleted successfully');
+      fetchTickets(); // Refresh the list
+    } catch (error) {
+      console.error('Delete ticket error:', error);
+      message.error(error.message || 'Failed to delete ticket');
+    }
   };
 
   const handleViewTicket = (ticketId) => {
@@ -142,14 +169,37 @@ const DashboardContent = () => {
     setSearchTerm(e.target.value);
   };
 
-  const filteredTickets = tickets.filter(ticket => {
-    const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || ticket.status === statusFilter;
-    const matchesLabel = labelFilter === 'All' || ticket.label === labelFilter;
-    
-    return matchesSearch && matchesStatus && matchesLabel;
-  });
+  const handleStatusFilterChange = (e) => {
+    setStatusFilter(e.target.value);
+    setPagination(prev => ({ ...prev, page: 0 })); // Reset to first page
+  };
+
+  const handleLabelFilterChange = (e) => {
+    setLabelFilter(e.target.value);
+    setPagination(prev => ({ ...prev, page: 0 })); // Reset to first page
+  };
+
+  const handlePreviousPage = () => {
+    if (pagination.page > 0) {
+      setPagination(prev => ({ ...prev, page: prev.page - 1 }));
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination.page < pagination.totalPages - 1) {
+      setPagination(prev => ({ ...prev, page: prev.page + 1 }));
+    }
+  };
+
+  const handleAccept = (userId) => {
+    setPendingUsers(users => users.filter(user => user.id !== userId));
+    message.success('User registration accepted');
+  };
+
+  const handleDecline = (userId) => {
+    setPendingUsers(users => users.filter(user => user.id !== userId));
+    message.success('User registration declined');
+  };
 
   const getAvatarColor = (name) => {
     const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#87d068'];
@@ -227,25 +277,28 @@ const DashboardContent = () => {
               prefix={<SearchOutlined />}
               value={searchTerm}
               onChange={handleSearchChange}
+              disabled={loading}
             />
             <FilterSelect 
               value={statusFilter} 
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={handleStatusFilterChange}
+              disabled={loading}
             >
-              <option value="All">All</option>
-              <option value="Todo">Todo</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Review">Review</option>
-              <option value="Ready To Deploy">Ready To Deploy</option>
+              <option value="All">All Status</option>
+              <option value="TODO">Todo</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="REVIEW">Review</option>
+              <option value="READY_TO_DEPLOY">Ready To Deploy</option>
             </FilterSelect>
             <FilterSelect 
               value={labelFilter} 
-              onChange={(e) => setLabelFilter(e.target.value)}
+              onChange={handleLabelFilterChange}
+              disabled={loading}
             >
-              <option value="All">All</option>
-              <option value="New Feature">New Feature</option>
-              <option value="Bug">Bug</option>
-              <option value="Improvement">Improvement</option>
+              <option value="All">All Labels</option>
+              <option value="NEW_FEATURE">New Feature</option>
+              <option value="BUG">Bug</option>
+              <option value="IMPROVEMENT">Improvement</option>
             </FilterSelect>
           </TicketFilters>
         </TicketHeader>
@@ -261,36 +314,66 @@ const DashboardContent = () => {
             <div>Actions</div>
           </TableHeader>
           
-          {filteredTickets.map((ticket) => (
-            <TableRow key={ticket.id}>
-              <TicketId>{ticket.id}</TicketId>
-              <TicketTitle>{ticket.title}</TicketTitle>
-              <LabelTag className={ticket.labelType}>{ticket.label}</LabelTag>
-              <StatusTag className={ticket.statusType}>{ticket.status}</StatusTag>
-              <UserName>{ticket.assignedTo}</UserName>
-              <UserName>{ticket.createdBy}</UserName>
-              <ActionMenu>
-                <ViewButton 
-                  icon={<EyeOutlined />}
-                  size="small"
-                  onClick={() => handleViewTicket(ticket.id)}
-                  title="View Details"
-                />
-                <DeleteButton 
-                  icon={<DeleteOutlined />}
-                  size="small"
-                  onClick={() => handleDeleteTicket(ticket.id)}
-                  title="Delete Ticket"
-                />
-              </ActionMenu>
-            </TableRow>
-          ))}
+          {loading ? (
+            <NoTicketsMessage>
+              Loading tickets...
+            </NoTicketsMessage>
+          ) : tickets.length === 0 ? (
+            <NoTicketsMessage>
+              No tickets found matching your criteria.
+            </NoTicketsMessage>
+          ) : (
+            tickets.map((ticket) => (
+              <TableRow key={ticket.id}>
+                <TicketId>TKT-{String(ticket.id).padStart(3, '0')}</TicketId>
+                <TicketTitle>{ticket.title}</TicketTitle>
+                <LabelTag className={ticket.labelType}>{ticket.label}</LabelTag>
+                <StatusTag className={ticket.statusType}>{ticket.status.replace('_', ' ')}</StatusTag>
+                <UserName>{ticket.assignedTo}</UserName>
+                <UserName>{ticket.createdBy}</UserName>
+                <ActionMenu>
+                  <ViewButton 
+                    icon={<EyeOutlined />}
+                    size="small"
+                    onClick={() => handleViewTicket(ticket.id)}
+                    title="View Details"
+                    disabled={loading}
+                  />
+                  <DeleteButton 
+                    icon={<DeleteOutlined />}
+                    size="small"
+                    onClick={() => handleDeleteTicket(ticket.id)}
+                    title="Delete Ticket"
+                    disabled={loading}
+                  />
+                </ActionMenu>
+              </TableRow>
+            ))
+          )}
         </TicketTable>
         
-        {filteredTickets.length === 0 && (
-          <NoTicketsMessage>
-            No tickets found matching your criteria.
-          </NoTicketsMessage>
+        {!loading && tickets.length > 0 && (
+          <PaginationContainer>
+            <ShowingText>
+              Showing {pagination.page * pagination.size + 1}-{Math.min((pagination.page + 1) * pagination.size, pagination.totalElements)} of {pagination.totalElements} tickets
+            </ShowingText>
+            <PaginationButtons>
+              <PaginationButton 
+                size="small" 
+                disabled={pagination.page === 0 || loading}
+                onClick={handlePreviousPage}
+              >
+                Previous
+              </PaginationButton>
+              <PaginationButton 
+                size="small" 
+                disabled={pagination.page >= pagination.totalPages - 1 || loading}
+                onClick={handleNextPage}
+              >
+                Next
+              </PaginationButton>
+            </PaginationButtons>
+          </PaginationContainer>
         )}
       </TicketSection>
     </>
