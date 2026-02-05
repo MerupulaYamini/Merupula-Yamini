@@ -97,11 +97,75 @@ export const TicketContent = styled.div`
 `;
 
 export const InfoSection = styled.div`
-  background: white;
-  border-radius: 8px;
+  width: 344px;
+  height: 226px;
+  background: #FFFFFF;
+  border-radius: 4px;
+  border: 1px solid #DCE0E5;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
   padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   height: fit-content;
+`;
+
+export const UpdateStatusSection = styled.div`
+  width: 344px;
+  background: #FFFFFF;
+  border-radius: 4px;
+  border: 1px solid #DCE0E5;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.07), 0px 0px 0px rgba(23, 26, 31, 0);
+  padding: 24px;
+  margin-top: 16px;
+`;
+
+export const UpdateStatusTitle = styled.h3`
+  color: #262626;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+`;
+
+export const StatusSelectLabel = styled.label`
+  color: #8c8c8c;
+  font-size: 14px;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 8px;
+`;
+
+export const StatusSelect = styled.select`
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: white;
+  color: #262626;
+  font-size: 14px;
+  margin-bottom: 16px;
+  
+  &:hover {
+    border-color: #40a9ff;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+  }
+`;
+
+export const UpdateStatusButton = styled(Button)`
+  width: 100%;
+  height: 40px;
+  background-color: #1890ff;
+  border-color: #1890ff;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  
+  &:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
 `;
 
 export const InfoRow = styled.div`
@@ -180,17 +244,15 @@ export const LabelTag = styled.span`
 export const UserInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-`;
-
-export const UserAvatar = styled(Avatar)`
-  background-color: ${props => props.bgcolor || '#1890ff'};
-  font-size: 12px;
 `;
 
 export const UserName = styled.span`
   color: #262626;
   font-size: 14px;
+  background-color: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
 `;
 
 export const DescriptionSection = styled.div`

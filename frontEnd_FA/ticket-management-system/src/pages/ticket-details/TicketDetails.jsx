@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Tag, Avatar, message } from 'antd';
+import { Button, Tag, message } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
 import {
@@ -20,12 +20,16 @@ import {
   StatusTag,
   LabelTag,
   UserInfo,
-  UserAvatar,
   UserName,
   DescriptionSection,
   SectionTitle,
   DescriptionText,
-  NotFoundMessage
+  NotFoundMessage,
+  UpdateStatusSection,
+  UpdateStatusTitle,
+  StatusSelectLabel,
+  StatusSelect,
+  UpdateStatusButton
 } from './ticket-details.styles';
 
 const TicketDetails = () => {
@@ -33,6 +37,7 @@ const TicketDetails = () => {
   const navigate = useNavigate();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedStatus, setSelectedStatus] = useState('');
 
   // Mock ticket data - in real app, this would come from API
   const mockTickets = {
@@ -103,6 +108,9 @@ const TicketDetails = () => {
     setTimeout(() => {
       const foundTicket = mockTickets[ticketId];
       setTicket(foundTicket);
+      if (foundTicket) {
+        setSelectedStatus(foundTicket.status);
+      }
       setLoading(false);
     }, 500);
   }, [ticketId]);
@@ -120,10 +128,13 @@ const TicketDetails = () => {
     navigate('/dashboard');
   };
 
-  const getAvatarColor = (name) => {
-    const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#87d068'];
-    const index = name.charCodeAt(0) % colors.length;
-    return colors[index];
+  const handleStatusUpdate = () => {
+    setTicket(prev => ({ ...prev, status: selectedStatus }));
+    message.success('Ticket status updated successfully');
+  };
+
+  const handleStatusChange = (e) => {
+    setSelectedStatus(e.target.value);
   };
 
   const getPriorityColor = (priority) => {
@@ -185,67 +196,80 @@ const TicketDetails = () => {
         </TicketHeader>
 
         <TicketContent>
-          <InfoSection>
-            <InfoRow>
-              <InfoLabel>Status:</InfoLabel>
-              <InfoValue>
-                <StatusTag className={ticket.statusType}>{ticket.status}</StatusTag>
-              </InfoValue>
-            </InfoRow>
-            
-            <InfoRow>
-              <InfoLabel>Label:</InfoLabel>
-              <InfoValue>
-                <LabelTag className={ticket.labelType}>{ticket.label}</LabelTag>
-              </InfoValue>
-            </InfoRow>
-            
-            <InfoRow>
-              <InfoLabel>Priority:</InfoLabel>
-              <InfoValue>
-                <Tag color={getPriorityColor(ticket.priority)}>{ticket.priority}</Tag>
-              </InfoValue>
-            </InfoRow>
-            
-            <InfoRow>
-              <InfoLabel>Assigned To:</InfoLabel>
-              <InfoValue>
-                <UserInfo>
-                  <UserAvatar bgcolor={getAvatarColor(ticket.assignedTo)}>
-                    {ticket.assignedTo.charAt(0)}
-                  </UserAvatar>
-                  <UserName>{ticket.assignedTo}</UserName>
-                </UserInfo>
-              </InfoValue>
-            </InfoRow>
-            
-            <InfoRow>
-              <InfoLabel>Created By:</InfoLabel>
-              <InfoValue>
-                <UserInfo>
-                  <UserAvatar bgcolor={getAvatarColor(ticket.createdBy)}>
-                    {ticket.createdBy.charAt(0)}
-                  </UserAvatar>
-                  <UserName>{ticket.createdBy}</UserName>
-                </UserInfo>
-              </InfoValue>
-            </InfoRow>
-            
-            <InfoRow>
-              <InfoLabel>Created Date:</InfoLabel>
-              <InfoValue>{ticket.createdDate}</InfoValue>
-            </InfoRow>
-            
-            <InfoRow>
-              <InfoLabel>Estimated Hours:</InfoLabel>
-              <InfoValue>{ticket.estimatedHours}h</InfoValue>
-            </InfoRow>
-            
-            <InfoRow>
-              <InfoLabel>Actual Hours:</InfoLabel>
-              <InfoValue>{ticket.actualHours}h</InfoValue>
-            </InfoRow>
-          </InfoSection>
+          <div>
+            <InfoSection>
+              <InfoRow>
+                <InfoLabel>Status:</InfoLabel>
+                <InfoValue>
+                  <StatusTag className={ticket.statusType}>{ticket.status}</StatusTag>
+                </InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Label:</InfoLabel>
+                <InfoValue>
+                  <LabelTag className={ticket.labelType}>{ticket.label}</LabelTag>
+                </InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Priority:</InfoLabel>
+                <InfoValue>
+                  <Tag color={getPriorityColor(ticket.priority)}>{ticket.priority}</Tag>
+                </InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Assigned To:</InfoLabel>
+                <InfoValue>
+                  <UserInfo>
+                    <UserName>{ticket.assignedTo}</UserName>
+                  </UserInfo>
+                </InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Created By:</InfoLabel>
+                <InfoValue>
+                  <UserInfo>
+                    <UserName>{ticket.createdBy}</UserName>
+                  </UserInfo>
+                </InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Created Date:</InfoLabel>
+                <InfoValue>{ticket.createdDate}</InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Estimated Hours:</InfoLabel>
+                <InfoValue>{ticket.estimatedHours}h</InfoValue>
+              </InfoRow>
+              
+              <InfoRow>
+                <InfoLabel>Actual Hours:</InfoLabel>
+                <InfoValue>{ticket.actualHours}h</InfoValue>
+              </InfoRow>
+            </InfoSection>
+
+            <UpdateStatusSection>
+              <UpdateStatusTitle>Update Status</UpdateStatusTitle>
+              <StatusSelectLabel>Change Status</StatusSelectLabel>
+              <StatusSelect 
+                value={selectedStatus} 
+                onChange={handleStatusChange}
+              >
+                <option value="Todo">Todo</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Review">Review</option>
+                <option value="Ready To Deploy">Ready To Deploy</option>
+              </StatusSelect>
+              <UpdateStatusButton onClick={handleStatusUpdate}>
+                Update Status
+              </UpdateStatusButton>
+            </UpdateStatusSection>
+          </div>
 
           <DescriptionSection>
             <SectionTitle>Description</SectionTitle>
