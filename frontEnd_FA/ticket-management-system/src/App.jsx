@@ -7,6 +7,7 @@ import UserManagement from './pages/user-management/UserManagement';
 import CreateTicket from './pages/create-ticket/CreateTicket';
 import TicketDetails from './pages/ticket-details/TicketDetails';
 import EditTicket from './pages/edit-ticket/EditTicket';
+import Profile from './pages/profile/Profile';
 import 'antd/dist/reset.css';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/create-ticket" element={<CreateTicket />} />
         <Route path="/ticket/:ticketId" element={<TicketDetails />} />
         <Route path="/edit-ticket/:ticketId" element={<EditTicket />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

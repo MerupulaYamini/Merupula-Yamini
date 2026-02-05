@@ -44,6 +44,13 @@ export const UserSection = styled.div`
 
 export const UserAvatar = styled(Avatar)`
   background-color: #1890ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+  }
 `;
 
 export const DashboardSider = styled(Sider)`

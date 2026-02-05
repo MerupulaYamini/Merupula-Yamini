@@ -75,6 +75,10 @@ const MainLayout = ({ children }) => {
     navigate('/login');
   };
 
+  const handleProfileClick = () => {
+    navigate('/profile');
+  };
+
   return (
     <DashboardLayout>
       <DashboardHeader>
@@ -84,7 +88,7 @@ const MainLayout = ({ children }) => {
         </LogoContainer>
         
         <UserSection>
-          <UserAvatar icon={<UserOutlined />} />
+          <UserAvatar icon={<UserOutlined />} onClick={handleProfileClick} />
           <LogoutIcon onClick={handleLogout} />
         </UserSection>
       </DashboardHeader>
