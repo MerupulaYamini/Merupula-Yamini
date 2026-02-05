@@ -135,15 +135,15 @@ export const createTicket = async (ticketData) => {
 };
 
 /**
- * Update a ticket
+ * Update a ticket (PATCH - partial update)
  * @param {number} ticketId - Ticket ID
- * @param {Object} ticketData - Updated ticket data
+ * @param {Object} ticketData - Updated ticket data (only fields to update)
  * @returns {Promise} Updated ticket data
  */
 export const updateTicket = async (ticketId, ticketData) => {
   try {
     const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(ticketData),
     });

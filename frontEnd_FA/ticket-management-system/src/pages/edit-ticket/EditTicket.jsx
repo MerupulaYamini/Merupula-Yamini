@@ -1,121 +1,135 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Form, Input, Select, Radio, Upload, Button, message } from 'antd';
-import { PaperClipOutlined, UploadOutlined } from '@ant-design/icons';
+import { message } from 'antd';
 import MainLayout from '../../components/layout/MainLayout';
+import { getTicketById, updateTicket } from '../../services/ticketService';
 import {
   EditTicketContainer,
   EditTicketCard,
   EditTicketTitle,
   EditTicketSubtitle,
-  StyledForm,
   FormSection,
-  FormRow,
   FormLabel,
   StyledInput,
   StyledTextArea,
   StyledSelect,
-  RadioGroup,
-  AttachmentSection,
-  AttachmentInput,
-  FileUploadArea,
   ActionButtons,
   CancelButton,
   SaveButton
 } from './edit-ticket.styles';
 
-const { TextArea } = Input;
-const { Option } = Select;
-
 const EditTicket = () => {
   const { ticketId } = useParams();
   const navigate = useNavigate();
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [ticket, setTicket] = useState(null);
+  
+  // Form fields
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [label, setLabel] = useState('');
+  const [assignedToUserId, setAssignedToUserId] = useState('');
 
-  // Mock ticket data - in real app, this would come from API
-  const mockTickets = {
-    'TKT-001': {
-      id: 'TKT-001',
-      title: 'Implement user authentication',
-      ticketTitle: 'Implement User Profile Screen with Password Change',
-      description: 'The user profile screen needs to allow users to update their username, display picture, and biography. Additionally, a dedicated section for changing their password must be included. Frontend validations for all fields are required to ensure data integrity and security.',
-      assignedTo: 'alice-johnson',
-      ticketType: 'New Feature',
-      status: 'In Progress',
-      attachments: 'https://example.com/mockup-video.mp4'
-    },
-    'TKT-002': {
-      id: 'TKT-002',
-      title: 'Fix database connection issue',
-      ticketTitle: 'Database Connection Timeout Issues',
-      description: 'Users are experiencing intermittent database connection timeouts. This is affecting the application performance and user experience. We need to investigate and fix the root cause.',
-      assignedTo: 'bob-williams',
-      ticketType: 'Bug',
-      status: 'Todo',
-      attachments: ''
+  useEffect(() => {
+    fetchTicket();
+  }, [ticketId]);
+
+  const fetchTicket = async () => {
+    setLoading(true);
+    try {
+      const data = await getTicketById(ticketId);
+      setTicket(data);
+      // Pre-fill form
+      setTitle(data.title || '');
+      setDescription(data.description || '');
+      setLabel(data.label || '');
+      setAssignedToUserId(data.assignedToId ? String(data.assignedToId) : '');
+    } catch (error) {
+      console.error('Failed to fetch ticket:', error);
+      message.error(error.message || 'Failed to load ticket');
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    // Simulate API call to fetch ticket data
-    setTimeout(() => {
-      const foundTicket = mockTickets[ticketId];
-      if (foundTicket) {
-        setTicket(foundTicket);
-        // Pre-fill form with existing data
-        form.setFieldsValue({
-          ticketTitle: foundTicket.ticketTitle,
-          description: foundTicket.description,
-          assignedTo: foundTicket.assignedTo,
-          ticketType: foundTicket.ticketType,
-          status: foundTicket.status,
-          attachments: foundTicket.attachments
-        });
-      }
-      setLoading(false);
-    }, 500);
-  }, [ticketId, form]);
-
-  const handleSave = async (values) => {
-    setLoading(true);
-    
-    // Console log the updated values for now
-    console.log('Updated ticket values:', {
-      ticketId,
-      ...values
+  const handleSave = async (e) => {
+    e.preventDefault();
+    console.log('=== SAVE BUTTON CLICKED ===');
+    console.log('1. Current form values:', { title, description, label, assignedToUserId });
+    console.log('2. Original ticket values:', { 
+      title: ticket.title, 
+      description: ticket.description, 
+      label: ticket.label, 
+      assignedToId: ticket.assignedToId 
     });
     
-    // Simulate API call delay
-    setTimeout(() => {
-      setLoading(false);
+    if (!title.trim()) {
+      console.log('ERROR: Title is empty');
+      message.error('Title is required');
+      return;
+    }
+
+    if (title.length > 150) {
+      console.log('ERROR: Title too long:', title.length);
+      message.error('Title cannot exceed 150 characters');
+      return;
+    }
+
+    console.log('3. Building updates object...');
+    setSaving(true);
+    try {
+      // Build update object with only changed fields
+      const updates = {};
+      if (title !== ticket.title) {
+        console.log('   - Title changed:', ticket.title, '->', title);
+        updates.title = title;
+      }
+      if (description !== ticket.description) {
+        console.log('   - Description changed');
+        updates.description = description;
+      }
+      if (label !== ticket.label) {
+        console.log('   - Label changed:', ticket.label, '->', label);
+        updates.label = label;
+      }
+      if (assignedToUserId && String(assignedToUserId) !== String(ticket.assignedToId)) {
+        console.log('   - Assigned user changed:', ticket.assignedToId, '->', assignedToUserId);
+        updates.assignedToUserId = parseInt(assignedToUserId);
+      }
+
+      console.log('4. Final updates object:', updates);
+      console.log('5. Number of changes:', Object.keys(updates).length);
+
+      if (Object.keys(updates).length === 0) {
+        console.log('WARNING: No changes detected');
+        message.info('No changes to save');
+        navigate(`/ticket/${ticketId}`);
+        return;
+      }
+
+      console.log('6. Calling updateTicket API...');
+      console.log('   - Ticket ID:', ticketId);
+      console.log('   - Updates:', JSON.stringify(updates, null, 2));
+      
+      const result = await updateTicket(ticketId, updates);
+      
+      console.log('7. API Response:', result);
+      console.log('SUCCESS: Ticket updated!');
       message.success('Ticket updated successfully!');
       navigate(`/ticket/${ticketId}`);
-    }, 1000);
+    } catch (error) {
+      console.error('ERROR: Update failed');
+      console.error('Error details:', error);
+      message.error(error.message || 'Failed to update ticket');
+    } finally {
+      setSaving(false);
+      console.log('=== SAVE PROCESS COMPLETE ===');
+    }
   };
 
   const handleCancel = () => {
     navigate(`/ticket/${ticketId}`);
-  };
-
-  const uploadProps = {
-    beforeUpload: (file) => {
-      const isValidType = file.type.startsWith('image/') || 
-                         file.type.startsWith('video/') || 
-                         file.type === 'application/pdf';
-      if (!isValidType) {
-        message.error('You can only upload image, video, or PDF files!');
-        return false;
-      }
-      const isLt10M = file.size / 1024 / 1024 < 10;
-      if (!isLt10M) {
-        message.error('File must be smaller than 10MB!');
-        return false;
-      }
-      return false; // Prevent auto upload
-    },
-    showUploadList: false,
   };
 
   if (loading) {
@@ -145,134 +159,131 @@ const EditTicket = () => {
           <EditTicketTitle>Edit Ticket</EditTicketTitle>
           <EditTicketSubtitle>Update the details to modify this task or issue.</EditTicketSubtitle>
 
-          <StyledForm
-            form={form}
-            layout="vertical"
-            onFinish={handleSave}
-            autoComplete="off"
-          >
+          <form onSubmit={handleSave}>
             <FormSection>
-              <FormLabel>Ticket Title</FormLabel>
-              <Form.Item
-                name="ticketTitle"
-                rules={[
-                  { required: true, message: 'Please input the ticket title!' }
-                ]}
-              >
-                <StyledInput 
-                  placeholder="Briefly describe the ticket"
-                  disabled={loading}
-                />
-              </Form.Item>
+              <FormLabel>Ticket Title *</FormLabel>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Briefly describe the ticket"
+                disabled={saving}
+                maxLength={150}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '6px',
+                  border: '1.5px solid #d9d9d9',
+                  fontSize: '14px'
+                }}
+              />
+              <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
+                {title.length}/150 characters
+              </div>
             </FormSection>
 
             <FormSection>
               <FormLabel>Description</FormLabel>
-              <Form.Item
-                name="description"
-                rules={[
-                  { required: true, message: 'Please input the description!' }
-                ]}
-              >
-                <StyledTextArea
-                  rows={6}
-                  placeholder="Provide a detailed explanation of the issue or task"
-                  disabled={loading}
-                />
-              </Form.Item>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={6}
+                placeholder="Provide a detailed explanation of the issue or task"
+                disabled={saving}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '6px',
+                  border: '1.5px solid #d9d9d9',
+                  fontSize: '14px',
+                  fontFamily: 'inherit',
+                  resize: 'vertical'
+                }}
+              />
             </FormSection>
-
-            <FormRow>
-              <div>
-                <FormLabel>Assigned To</FormLabel>
-                <Form.Item
-                  name="assignedTo"
-                  rules={[
-                    { required: true, message: 'Please select an assignee!' }
-                  ]}
-                >
-                  <StyledSelect 
-                    placeholder="Select an assignee"
-                    disabled={loading}
-                  >
-                    <Option value="alice-johnson">Alice Johnson</Option>
-                    <Option value="bob-williams">Bob Williams</Option>
-                    <Option value="charlie-brown">Charlie Brown</Option>
-                    <Option value="admin-user">Admin User</Option>
-                  </StyledSelect>
-                </Form.Item>
-              </div>
-
-              <div>
-                <FormLabel>Ticket Type</FormLabel>
-                <Form.Item
-                  name="ticketType"
-                  rules={[
-                    { required: true, message: 'Please select a ticket type!' }
-                  ]}
-                >
-                  <RadioGroup disabled={loading}>
-                    <Radio value="Bug">Bug</Radio>
-                    <Radio value="New Feature">New Feature</Radio>
-                    <Radio value="Task">Task</Radio>
-                    <Radio value="Improvement">Improvement</Radio>
-                    <Radio value="Support Request">Support Request</Radio>
-                  </RadioGroup>
-                </Form.Item>
-              </div>
-            </FormRow>
 
             <FormSection>
-              <FormLabel>Ticket Status</FormLabel>
-              <Form.Item
-                name="status"
-                rules={[
-                  { required: true, message: 'Please select a status!' }
-                ]}
+              <FormLabel>Label</FormLabel>
+              <select
+                value={label}
+                onChange={(e) => setLabel(e.target.value)}
+                disabled={saving}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '6px',
+                  border: '1.5px solid #d9d9d9',
+                  fontSize: '14px',
+                  backgroundColor: 'white'
+                }}
               >
-                <StyledSelect 
-                  placeholder="Select status"
-                  disabled={loading}
-                >
-                  <Option value="Todo">Todo</Option>
-                  <Option value="In Progress">In Progress</Option>
-                  <Option value="Review">Review</Option>
-                  <Option value="Ready To Deploy">Ready To Deploy</Option>
-                </StyledSelect>
-              </Form.Item>
+                <option value="">Select a label</option>
+                <option value="BUG">Bug</option>
+                <option value="FEATURE">Feature</option>
+                <option value="TASK">Task</option>
+                <option value="IMPROVEMENT">Improvement</option>
+                <option value="SUPPORT">Support</option>
+              </select>
             </FormSection>
 
-            <AttachmentSection>
-              <FormLabel>Attachments</FormLabel>
-              <Form.Item name="attachments">
-                <AttachmentInput
-                  placeholder="Paste attachment URL (e.g., image, video, document link)"
-                  prefix={<PaperClipOutlined />}
-                  disabled={loading}
-                />
-              </Form.Item>
-              
-              <Upload {...uploadProps}>
-                <FileUploadArea>
-                  <UploadOutlined />
-                  <span>Or drag and drop files here (visual placeholder)</span>
-                </FileUploadArea>
-              </Upload>
-            </AttachmentSection>
+            <FormSection>
+              <FormLabel>Assigned To (User ID)</FormLabel>
+              <input
+                type="number"
+                value={assignedToUserId}
+                onChange={(e) => setAssignedToUserId(e.target.value)}
+                placeholder="Enter user ID to assign"
+                disabled={saving}
+                style={{
+                  width: '100%',
+                  padding: '12px 16px',
+                  borderRadius: '6px',
+                  border: '1.5px solid #d9d9d9',
+                  fontSize: '14px'
+                }}
+              />
+              <div style={{ fontSize: '12px', color: '#8c8c8c', marginTop: '4px' }}>
+                Currently assigned to: {ticket.assignedToName || 'Unassigned'} (ID: {ticket.assignedToId || 'N/A'})
+              </div>
+            </FormSection>
 
             <ActionButtons>
-              <CancelButton onClick={handleCancel} disabled={loading}>
-                Cancel
-              </CancelButton>
-              <SaveButton 
-                type="primary" 
-                htmlType="submit" 
-                loading={loading}
+              <button 
+                type="button" 
+                onClick={handleCancel} 
+                disabled={saving}
+                style={{
+                  padding: '8px 24px',
+                  height: '40px',
+                  borderRadius: '6px',
+                  border: '1.5px solid #d9d9d9',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  backgroundColor: 'white',
+                  cursor: saving ? 'not-allowed' : 'pointer'
+                }}
               >
-                Save Changes
-              </SaveButton>
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={saving}
+                style={{
+                  padding: '8px 24px',
+                  height: '40px',
+                  backgroundColor: '#1890ff',
+                  border: '1.5px solid #1890ff',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: 'white',
+                  cursor: saving ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
             </ActionButtons>
-          </StyledForm>
+          </form>
         </EditTicketCard>
       </EditTicketContainer>
     </MainLayout>
