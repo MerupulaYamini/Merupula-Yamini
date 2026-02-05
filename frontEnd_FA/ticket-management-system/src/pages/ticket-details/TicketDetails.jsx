@@ -333,7 +333,7 @@ const TicketDetails = () => {
   };
 
   const handleEdit = () => {
-    message.info('Edit functionality will be implemented with API');
+    navigate(`/edit-ticket/${ticketId}`);
   };
 
   const handleDelete = () => {
