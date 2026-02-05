@@ -89,6 +89,13 @@ export const PageSubtitle = styled.p`
 `;
 
 export const PendingCard = styled(Card)`
+  width: 1034px;
+  height: 326px;
+  background: #FFFFFF;
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08), 0px 0px 0px rgba(23, 26, 31, 0);
+  border: none;
+  
   .ant-card-head {
     border-bottom: 2px solid #1890ff;
     
@@ -101,6 +108,8 @@ export const PendingCard = styled(Card)`
   
   .ant-card-body {
     padding: 0;
+    height: calc(326px - 57px); /* Subtract header height */
+    overflow: hidden;
   }
 `;
 
@@ -387,6 +396,19 @@ export const ActionMenu = styled.div`
   align-items: center;
 `;
 
+export const ViewButton = styled(Button)`
+  background-color: #1890ff;
+  border-color: #1890ff;
+  color: white;
+  padding: 4px 8px;
+  height: auto;
+  
+  &:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+`;
+
 export const DeleteButton = styled(Button)`
   background-color: #ff4d4f;
   border-color: #ff4d4f;
@@ -397,19 +419,6 @@ export const DeleteButton = styled(Button)`
   &:hover {
     background-color: #ff7875;
     border-color: #ff7875;
-  }
-`;
-
-export const MoreButton = styled(Button)`
-  border: none;
-  background: none;
-  color: #8c8c8c;
-  padding: 4px;
-  height: auto;
-  
-  &:hover {
-    color: #1890ff;
-    background: #f0f8ff;
   }
 `;
 

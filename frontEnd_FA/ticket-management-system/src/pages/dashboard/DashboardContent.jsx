@@ -4,8 +4,9 @@ import {
   PlusCircleOutlined,
   SearchOutlined,
   DeleteOutlined,
-  MoreOutlined
+  EyeOutlined
 } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import {
   PageTitle,
   PageSubtitle,
@@ -37,12 +38,13 @@ import {
   UserName,
   ActionMenu,
   DeleteButton,
-  MoreButton,
+  ViewButton,
   NoTicketsMessage,
   UserAvatarColored
 } from './dashboard.styles';
 
 const DashboardContent = () => {
+  const navigate = useNavigate();
   // Mock data for pending registrations
   const [pendingUsers, setPendingUsers] = useState([
     {
@@ -130,6 +132,10 @@ const DashboardContent = () => {
   const handleDeleteTicket = (ticketId) => {
     setTickets(tickets => tickets.filter(ticket => ticket.id !== ticketId));
     message.success('Ticket deleted successfully');
+  };
+
+  const handleViewTicket = (ticketId) => {
+    navigate(`/ticket/${ticketId}`);
   };
 
   const handleSearchChange = (e) => {
@@ -264,14 +270,17 @@ const DashboardContent = () => {
               <UserName>{ticket.assignedTo}</UserName>
               <UserName>{ticket.createdBy}</UserName>
               <ActionMenu>
+                <ViewButton 
+                  icon={<EyeOutlined />}
+                  size="small"
+                  onClick={() => handleViewTicket(ticket.id)}
+                  title="View Details"
+                />
                 <DeleteButton 
                   icon={<DeleteOutlined />}
                   size="small"
                   onClick={() => handleDeleteTicket(ticket.id)}
-                />
-                <MoreButton 
-                  icon={<MoreOutlined />}
-                  size="small"
+                  title="Delete Ticket"
                 />
               </ActionMenu>
             </TableRow>
