@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Form, Button } from 'antd';
+import { Form, Button, Input } from 'antd';
 
 export const AuthPageWrapper = styled.div`
   min-height: 100vh;
@@ -148,5 +148,139 @@ export const CreateAccountLink = styled.a`
   &:hover {
     color: #40a9ff;
     text-decoration: underline;
+  }
+`;
+
+// Register Page Components
+export const AlertBox = styled.div`
+  background-color: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+
+  .ant-typography {
+    margin: 0;
+    color: #0050b3;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .anticon {
+    color: #1890ff;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+`;
+
+export const PasswordStrengthIndicator = styled.div`
+  margin-top: 8px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  
+  &.weak {
+    color: #ff4d4f;
+  }
+  
+  &.medium {
+    color: #fa8c16;
+  }
+  
+  &.strong {
+    color: #52c41a;
+  }
+`;
+
+export const FileUploadArea = styled.div`
+  border: 2px dashed #d9d9d9;
+  border-radius: 6px;
+  padding: 20px;
+  text-align: center;
+  background-color: #fafafa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    background-color: #f0f8ff;
+  }
+  
+  &.dragover {
+    border-color: #1890ff;
+    background-color: #f0f8ff;
+  }
+  
+  .upload-icon {
+    font-size: 24px;
+    color: #8c8c8c;
+    margin-bottom: 8px;
+  }
+  
+  .upload-text {
+    color: #595959;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  .upload-hint {
+    color: #8c8c8c;
+    font-size: 12px;
+  }
+  
+  .selected-file {
+    color: #1890ff;
+    font-weight: 500;
+    margin-top: 8px;
+  }
+`;
+
+export const CreateAccountButton = styled(Button)`
+  width: 100%;
+  height: 48px;
+  background-color: #1890ff;
+  border-color: #1890ff;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 8px;
+  
+  &:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+  
+  &:focus {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+`;
+
+export const SignInLink = styled.a`
+  color: #1890ff;
+  text-decoration: none;
+  font-size: 14px;
+  
+  &:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+  }
+`;
+
+export const StyledTextArea = styled(Input.TextArea)`
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  padding: 12px 16px;
+  
+  &:hover {
+    border-color: #40a9ff;
+  }
+  
+  &:focus {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
   }
 `;
