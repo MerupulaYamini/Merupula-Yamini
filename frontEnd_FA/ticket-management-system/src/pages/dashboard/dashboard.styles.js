@@ -423,6 +423,10 @@ export const NoTicketsMessage = styled.div`
   font-size: 14px;
 `;
 
+export const UserAvatarColored = styled(Avatar)`
+  background-color: ${props => props.bgcolor || '#1890ff'};
+`;
+
 export const LogoutIcon = styled(LogoutOutlined)`
   font-size: 16px;
   cursor: pointer;
