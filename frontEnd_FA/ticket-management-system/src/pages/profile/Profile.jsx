@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Input, Upload, message } from 'antd';
 import { UserOutlined, UploadOutlined } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
+import { getUserById, getCurrentUser } from '../../services/authService';
 import {
   ProfileContainer,
   ProfileHeader,
@@ -36,21 +37,66 @@ const Profile = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [adminPasswordLoading, setAdminPasswordLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Mock user data
-  const [userData] = useState({
-    username: 'employee.user',
-    bio: 'Passionate software developer focusing on front-end technologies and user experience. Enjoying creating intuitive and performant web applications.',
-    avatar: null,
-    role: 'admin' // Mock role - in real app this would come from authentication
+  // User data from API
+  const [userData, setUserData] = useState({
+    id: null,
+    username: '',
+    email: '',
+    bio: '',
+    status: '',
+    roles: [],
+    createdAt: '',
+    avatar: null
   });
 
-  React.useEffect(() => {
-    profileForm.setFieldsValue({
-      username: userData.username,
-      bio: userData.bio
-    });
-  }, [profileForm, userData]);
+  // Fetch user profile data
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+
+  const fetchUserProfile = async () => {
+    setLoading(true);
+    try {
+      // Get current user ID from localStorage
+      const currentUser = getCurrentUser();
+      const userId = currentUser.userId;
+      
+      console.log('Fetching profile for user ID:', userId);
+      
+      if (!userId) {
+        message.error('User not logged in');
+        return;
+      }
+
+      // Fetch user details from API
+      const userDetails = await getUserById(userId);
+      console.log('User profile fetched:', userDetails);
+      
+      setUserData({
+        id: userDetails.id,
+        username: userDetails.username,
+        email: userDetails.email,
+        bio: userDetails.bio || '',
+        status: userDetails.status,
+        roles: userDetails.roles || [],
+        createdAt: userDetails.createdAt,
+        avatar: null // Backend doesn't return avatar URL yet
+      });
+
+      // Set form values
+      profileForm.setFieldsValue({
+        username: userDetails.username,
+        bio: userDetails.bio || ''
+      });
+    } catch (error) {
+      console.error('Failed to fetch user profile:', error);
+      message.error('Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleProfileSave = async (values) => {
     setProfileLoading(true);
@@ -136,7 +182,12 @@ const Profile = () => {
           <ProfileSubtitle>Manage your personal information and account settings.</ProfileSubtitle>
         </ProfileHeader>
 
-        <ProfileContent>
+        {loading ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#8c8c8c' }}>
+            Loading profile...
+          </div>
+        ) : (
+          <ProfileContent>
           {/* Profile Information Section */}
           <ProfileSection>
             <SectionTitle>Profile Information</SectionTitle>
@@ -161,6 +212,16 @@ const Profile = () => {
                     disabled={profileLoading}
                   />
                 </Form.Item>
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel>Email</FormLabel>
+                <FormInput 
+                  value={userData.email}
+                  disabled
+                  style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                />
+                <UploadHint>Email cannot be changed</UploadHint>
               </FormGroup>
 
               <FormGroup>
@@ -301,7 +362,7 @@ const Profile = () => {
           </ProfileSection>
 
           {/* Admin: Manage User Passwords Section - Only show for admin users */}
-          {userData.role === 'admin' && (
+          {userData.roles && userData.roles.includes('ADMIN') && (
             <AdminSection>
               <SectionTitle>Admin: Manage User Passwords</SectionTitle>
               <SectionSubtitle>As an Admin, you can reset passwords for other users.</SectionSubtitle>
@@ -382,6 +443,7 @@ const Profile = () => {
             </AdminSection>
           )}
         </ProfileContent>
+        )}
       </ProfileContainer>
     </MainLayout>
   );

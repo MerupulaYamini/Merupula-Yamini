@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
-import { message, Avatar } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { message, Modal } from 'antd';
 import {
   SearchOutlined,
   DeleteOutlined,
-  EyeOutlined
+  EyeOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
+import { getAllUsers, getUserById, deleteUser } from '../../services/authService';
 import {
   PageTitle,
   PageSubtitle,
@@ -25,59 +27,75 @@ import {
 import { StatusTag, RoleTag, UserInfoContainer, SectionDescription, PaginationFooter, PaginationInfo, PaginationControls, PaginationBtn, TitleContainer, UserManagementTable, UserTableHeader, UserTableRow } from './user-management.styles';
 
 const UserManagement = () => {
-  // Mock data for users
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: 'Alice Johnson',
-      email: 'alice.j@example.com',
-      role: 'Admin',
-      status: 'ACTIVE'
-    },
-    {
-      id: 2,
-      name: 'Bob Williams',
-      email: 'bob.w@example.com',
-      role: 'Employee',
-      status: 'PENDING'
-    },
-    {
-      id: 3,
-      name: 'Charlie Brown',
-      email: 'charlie.b@example.com',
-      role: 'Employee',
-      status: 'ACTIVE'
-    },
-    {
-      id: 4,
-      name: 'Diana Prince',
-      email: 'diana.p@example.com',
-      role: 'Admin',
-      status: 'ACTIVE'
-    },
-    {
-      id: 5,
-      name: 'Eve Adams',
-      email: 'eve.a@example.com',
-      role: 'Employee',
-      status: 'PENDING'
-    },
-    {
-      id: 6,
-      name: 'Frank Miller',
-      email: 'frank.m@example.com',
-      role: 'Employee',
-      status: 'ACTIVE'
-    }
-  ]);
-
+  // State for users
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [roleFilter, setRoleFilter] = useState('All');
 
-  const handleDeleteUser = (userId) => {
-    setUsers(users => users.filter(user => user.id !== userId));
-    message.success('User deleted successfully');
+  // Fetch users on component mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      console.log('Fetching all users...');
+      const usersData = await getAllUsers();
+      console.log('Users fetched:', usersData);
+      
+      // Fetch detailed info for each user to get roles
+      console.log('Fetching roles for each user...');
+      const usersWithRoles = await Promise.all(
+        usersData.map(async (user) => {
+          try {
+            const userDetails = await getUserById(user.id);
+            return {
+              ...user,
+              roles: userDetails.roles || ['EMPLOYEE']
+            };
+          } catch (error) {
+            console.error(`Failed to fetch roles for user ${user.id}:`, error);
+            return {
+              ...user,
+              roles: ['EMPLOYEE'] // Fallback
+            };
+          }
+        })
+      );
+      
+      console.log('Users with roles:', usersWithRoles);
+      setUsers(usersWithRoles);
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      message.error('Failed to load users');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteUser = (userId, username) => {
+    Modal.confirm({
+      title: 'Delete User',
+      icon: <ExclamationCircleOutlined />,
+      content: `Are you sure you want to delete user "${username}"? This action cannot be undone.`,
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          console.log('Deleting user:', userId);
+          await deleteUser(userId);
+          message.success('User deleted successfully');
+          fetchUsers(); // Refresh the list
+        } catch (error) {
+          console.error('Delete user error:', error);
+          message.error(error.message || 'Failed to delete user');
+        }
+      }
+    });
   };
 
   const handleViewUser = (userId) => {
@@ -90,10 +108,10 @@ const UserManagement = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
-    const matchesRole = roleFilter === 'All' || user.role === roleFilter;
+    const matchesRole = roleFilter === 'All' || (user.roles && user.roles.includes(roleFilter));
     
     return matchesSearch && matchesStatus && matchesRole;
   });
@@ -156,8 +174,8 @@ const UserManagement = () => {
               onChange={(e) => setRoleFilter(e.target.value)}
             >
               <option value="All">Filter Role</option>
-              <option value="Admin">Admin</option>
-              <option value="Employee">Employee</option>
+              <option value="ADMIN">Admin</option>
+              <option value="EMPLOYEE">Employee</option>
             </FilterSelect>
           </TicketFilters>
         </TicketHeader>
@@ -173,38 +191,53 @@ const UserManagement = () => {
             <div></div>
           </UserTableHeader>
           
-          {filteredUsers.map((user) => (
-            <UserTableRow key={user.id}>
-              <UserInfoContainer>
-                <UserAvatarColored bgcolor={getAvatarColor(user.name)} size={32}>
-                  {user.name.charAt(0)}
-                </UserAvatarColored>
-                <UserName>{user.name}</UserName>
-              </UserInfoContainer>
-              <UserName>{user.email}</UserName>
-              {getRoleTag(user.role)}
-              {getStatusTag(user.status)}
-              <ActionMenu>
-                <ViewButton 
-                  icon={<EyeOutlined />}
-                  size="small"
-                  onClick={() => handleViewUser(user.id)}
-                  title="View User Details"
-                />
-                <DeleteButton 
-                  icon={<DeleteOutlined />}
-                  size="small"
-                  onClick={() => handleDeleteUser(user.id)}
-                  title="Delete User"
-                />
-              </ActionMenu>
-              <div></div>
-              <div></div>
-            </UserTableRow>
-          ))}
+          {loading ? (
+            <div style={{ padding: '40px', textAlign: 'center', color: '#8c8c8c' }}>
+              Loading users...
+            </div>
+          ) : (
+            filteredUsers.map((user) => {
+              const isAdmin = user.roles && user.roles.includes('ADMIN');
+              return (
+                <UserTableRow key={user.id}>
+                  <UserInfoContainer>
+                    <UserAvatarColored bgcolor={getAvatarColor(user.username)} size={32}>
+                      {user.username.charAt(0).toUpperCase()}
+                    </UserAvatarColored>
+                    <UserName>{user.username}</UserName>
+                  </UserInfoContainer>
+                  <UserName>{user.email}</UserName>
+                  <RoleTag className={isAdmin ? 'admin' : 'employee'}>
+                    {isAdmin ? 'Admin' : 'Employee'}
+                  </RoleTag>
+                  {getStatusTag(user.status)}
+                  <ActionMenu>
+                    <ViewButton 
+                      icon={<EyeOutlined />}
+                      size="small"
+                      onClick={() => handleViewUser(user.id)}
+                      title="View User Details"
+                      disabled={loading}
+                    />
+                    {!isAdmin && (
+                      <DeleteButton 
+                        icon={<DeleteOutlined />}
+                        size="small"
+                        onClick={() => handleDeleteUser(user.id, user.username)}
+                        title="Delete User"
+                        disabled={loading}
+                      />
+                    )}
+                  </ActionMenu>
+                  <div></div>
+                  <div></div>
+                </UserTableRow>
+              );
+            })
+          )}
         </UserManagementTable>
         
-        {filteredUsers.length === 0 && (
+        {!loading && filteredUsers.length === 0 && (
           <NoTicketsMessage>
             No users found matching your criteria.
           </NoTicketsMessage>

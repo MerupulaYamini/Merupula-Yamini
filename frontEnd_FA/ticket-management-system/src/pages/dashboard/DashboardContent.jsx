@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import {
   PlusCircleOutlined,
   SearchOutlined,
   DeleteOutlined,
-  EyeOutlined
+  EyeOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getAllTickets, deleteTicket, mapStatus, mapLabel } from '../../services/ticketService';
+import { getAllUsers, updateUserStatus, deleteUser } from '../../services/authService';
 import {
   PageTitle,
   PageSubtitle,
@@ -62,27 +64,9 @@ const DashboardContent = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [labelFilter, setLabelFilter] = useState('All');
   
-  // Mock data for pending registrations (keep this as is for now)
-  const [pendingUsers, setPendingUsers] = useState([
-    {
-      id: 1,
-      name: 'Frank Green',
-      email: 'frank.g@example.com',
-      avatar: 'F'
-    },
-    {
-      id: 2,
-      name: 'Grace Hall',
-      email: 'grace.h@example.com',
-      avatar: 'G'
-    },
-    {
-      id: 3,
-      name: 'Harry King',
-      email: 'harry.k@example.com',
-      avatar: 'H'
-    }
-  ]);
+  // State for pending users
+  const [pendingUsers, setPendingUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   // Fetch tickets from API
   const fetchTickets = async () => {
@@ -133,7 +117,75 @@ const DashboardContent = () => {
   // Fetch tickets on component mount and when filters change
   useEffect(() => {
     fetchTickets();
+    fetchPendingUsers();
   }, [pagination.page, statusFilter, labelFilter]);
+
+  // Fetch pending users
+  const fetchPendingUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      console.log('Fetching all users...');
+      const users = await getAllUsers();
+      console.log('All users:', users);
+      
+      // Filter only PENDING users
+      const pending = users.filter(user => user.status === 'PENDING');
+      console.log('Pending users:', pending);
+      
+      setPendingUsers(pending);
+    } catch (error) {
+      console.error('Failed to fetch pending users:', error);
+      // Don't show error message, just log it
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  // Handle Accept user (change status to ACTIVE)
+  const handleAcceptUser = (userId) => {
+    Modal.confirm({
+      title: 'Accept User',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Are you sure you want to accept this user registration?',
+      okText: 'Accept',
+      okType: 'primary',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          console.log('Accepting user:', userId);
+          await updateUserStatus(userId, 'ACTIVE');
+          message.success('User accepted successfully');
+          fetchPendingUsers(); // Refresh the list
+        } catch (error) {
+          console.error('Accept user error:', error);
+          message.error(error.message || 'Failed to accept user');
+        }
+      }
+    });
+  };
+
+  // Handle Decline user (delete user)
+  const handleDeclineUser = (userId) => {
+    Modal.confirm({
+      title: 'Decline User',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Are you sure you want to decline this user registration? This will permanently delete the user.',
+      okText: 'Decline',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          console.log('Declining user:', userId);
+          await deleteUser(userId);
+          message.success('User declined successfully');
+          fetchPendingUsers(); // Refresh the list
+        } catch (error) {
+          console.error('Decline user error:', error);
+          message.error(error.message || 'Failed to decline user');
+        }
+      }
+    });
+  };
 
   // Handle search with debounce
   useEffect(() => {
@@ -150,15 +202,26 @@ const DashboardContent = () => {
     navigate('/create-ticket');
   };
 
-  const handleDeleteTicket = async (ticketId) => {
-    try {
-      await deleteTicket(ticketId);
-      message.success('Ticket deleted successfully');
-      fetchTickets(); // Refresh the list
-    } catch (error) {
-      console.error('Delete ticket error:', error);
-      message.error(error.message || 'Failed to delete ticket');
-    }
+  const handleDeleteTicket = (ticketId) => {
+    Modal.confirm({
+      title: 'Delete Ticket',
+      icon: <ExclamationCircleOutlined />,
+      content: 'Are you sure you want to delete this ticket? This action cannot be undone.',
+      okText: 'Delete',
+      okType: 'danger',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          console.log('Deleting ticket:', ticketId);
+          await deleteTicket(ticketId);
+          message.success('Ticket deleted successfully');
+          fetchTickets(); // Refresh the list
+        } catch (error) {
+          console.error('Delete ticket error:', error);
+          message.error(error.message || 'Failed to delete ticket');
+        }
+      }
+    });
   };
 
   const handleViewTicket = (ticketId) => {
@@ -191,16 +254,6 @@ const DashboardContent = () => {
     }
   };
 
-  const handleAccept = (userId) => {
-    setPendingUsers(users => users.filter(user => user.id !== userId));
-    message.success('User registration accepted');
-  };
-
-  const handleDecline = (userId) => {
-    setPendingUsers(users => users.filter(user => user.id !== userId));
-    message.success('User registration declined');
-  };
-
   const getAvatarColor = (name) => {
     const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#87d068'];
     const index = name.charCodeAt(0) % colors.length;
@@ -215,38 +268,50 @@ const DashboardContent = () => {
       </PageSubtitle>
 
       <PendingCard title="Pending Registrations">
-        {pendingUsers.map((user) => (
-          <UserItem key={user.id}>
-            <UserInfo>
-              <UserAvatarColored bgcolor={getAvatarColor(user.name)}>
-                {user.avatar}
-              </UserAvatarColored>
-              <UserDetails>
-                <p className="user-name">{user.name}</p>
-                <p className="user-email">{user.email}</p>
-              </UserDetails>
-            </UserInfo>
-            
-            <ActionButtons>
-              <AcceptButton 
-                size="small"
-                onClick={() => handleAccept(user.id)}
-              >
-                Accept
-              </AcceptButton>
-              <DeclineButton 
-                size="small"
-                onClick={() => handleDecline(user.id)}
-              >
-                Decline
-              </DeclineButton>
-            </ActionButtons>
-          </UserItem>
-        ))}
+        {loadingUsers ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#8c8c8c' }}>
+            Loading pending users...
+          </div>
+        ) : pendingUsers.length === 0 ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: '#8c8c8c' }}>
+            No pending registrations
+          </div>
+        ) : (
+          pendingUsers.map((user) => (
+            <UserItem key={user.id}>
+              <UserInfo>
+                <UserAvatarColored bgcolor={getAvatarColor(user.username)}>
+                  {user.username.charAt(0).toUpperCase()}
+                </UserAvatarColored>
+                <UserDetails>
+                  <p className="user-name">{user.username}</p>
+                  <p className="user-email">{user.email}</p>
+                </UserDetails>
+              </UserInfo>
+              
+              <ActionButtons>
+                <AcceptButton 
+                  size="small"
+                  onClick={() => handleAcceptUser(user.id)}
+                  disabled={loadingUsers}
+                >
+                  Accept
+                </AcceptButton>
+                <DeclineButton 
+                  size="small"
+                  onClick={() => handleDeclineUser(user.id)}
+                  disabled={loadingUsers}
+                >
+                  Decline
+                </DeclineButton>
+              </ActionButtons>
+            </UserItem>
+          ))
+        )}
         
         <PaginationContainer>
           <ShowingText>
-            Showing 1-3 of {pendingUsers.length} Users
+            Showing {pendingUsers.length} of {pendingUsers.length} Users
           </ShowingText>
           <PaginationButtons>
             <PaginationButton size="small" disabled>

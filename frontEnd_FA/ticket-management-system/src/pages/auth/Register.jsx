@@ -7,7 +7,8 @@ import {
   UploadOutlined, 
   InfoCircleOutlined 
 } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { registerUser } from '../../services/authService';
 import {
   AuthPageWrapper,
   AuthCard,
@@ -26,6 +27,7 @@ import {
 const { TextArea } = Input;
 
 const Register = () => {
+  const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
@@ -33,8 +35,17 @@ const Register = () => {
 
   const checkPasswordStrength = (password) => {
     if (!password) return '';
-    if (password.length < 6) return 'weak';
-    if (password.length < 10) return 'medium';
+    
+    const hasMinLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[@$!%*?&]/.test(password);
+    
+    const criteriaCount = [hasMinLength, hasUpperCase, hasLowerCase, hasNumber, hasSpecialChar].filter(Boolean).length;
+    
+    if (criteriaCount < 3) return 'weak';
+    if (criteriaCount < 5) return 'medium';
     return 'strong';
   };
 
@@ -66,20 +77,78 @@ const Register = () => {
   };
 
   const onFinish = async (values) => {
+    console.log('=== REGISTER FORM SUBMITTED ===');
+    console.log('Form values:', values);
+    console.log('Selected file:', selectedFile);
+    
+    // Validation
+    if (!selectedFile) {
+      message.error('Profile picture is required');
+      return;
+    }
+    
     setLoading(true);
     
-    // Console log the form values for now
-    console.log('Register form values:', {
-      ...values,
-      displayPicture: selectedFile
-    });
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      // Create FormData for multipart/form-data
+      const formData = new FormData();
+      
+      console.log('Building FormData...');
+      formData.append('username', values.username);
+      console.log('  - username:', values.username);
+      
+      formData.append('email', values.email);
+      console.log('  - email:', values.email);
+      
+      formData.append('password', values.password);
+      console.log('  - password:', '***hidden***');
+      
+      if (values.bio) {
+        formData.append('bio', values.bio);
+        console.log('  - bio:', values.bio);
+      }
+      
+      // IMPORTANT: Backend expects 'profilePicture' not 'displayPicture'
+      formData.append('profilePicture', selectedFile);
+      console.log('  - profilePicture:', selectedFile.name, `(${selectedFile.size} bytes)`);
+      
+      console.log('Calling register API...');
+      const response = await registerUser(formData);
+      console.log('Registration API response:', response);
+      console.log('User created with ID:', response.id);
+      console.log('User status:', response.status);
+      console.log('User email:', response.email);
+      console.log('User username:', response.username);
+      
       message.success('Registration submitted! Pending administrator approval.');
-      // TODO: Implement actual registration API call here
-    }, 1000);
+      form.resetFields();
+      setSelectedFile(null);
+      
+      // Navigate to login page after 2 seconds
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
+    } catch (error) {
+      console.error('=== REGISTRATION ERROR ===');
+      console.error('Error object:', error);
+      console.error('Status:', error.status);
+      console.error('Message:', error.message);
+      console.error('Field errors:', error.fieldErrors);
+      
+      // Show field-specific errors
+      if (error.fieldErrors) {
+        Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
+          console.error(`  - ${field}: ${errorMsg}`);
+          message.error(`${field}: ${errorMsg}`);
+        });
+      } else {
+        message.error(error.message || 'Registration failed. Please try again.');
+      }
+    } finally {
+      setLoading(false);
+      console.log('=== REGISTRATION PROCESS COMPLETE ===');
+    }
   };
 
   const onFinishFailed = (errorInfo) => {
@@ -174,14 +243,18 @@ const Register = () => {
                 message: 'Please input your password!',
               },
               {
-                min: 6,
-                message: 'Password must be at least 6 characters long!',
+                min: 8,
+                message: 'Password must be at least 8 characters long!',
+              },
+              {
+                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+                message: 'Password must contain uppercase, lowercase, number, and special character!',
               },
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Enter a secure password"
+              placeholder="Min 8 chars with uppercase, lowercase, number & special char"
               size="large"
               disabled={loading}
               onChange={handlePasswordChange}
