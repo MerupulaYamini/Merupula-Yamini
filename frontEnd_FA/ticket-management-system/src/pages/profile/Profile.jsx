@@ -82,15 +82,34 @@ const Profile = () => {
       }
 
       // Check if viewing own profile
-      setIsOwnProfile(!urlUserId || urlUserId === currentUserId);
+      const viewingOwnProfile = !urlUserId || urlUserId === currentUserId;
+      setIsOwnProfile(viewingOwnProfile);
       
       // Check if current user is admin
       const currentUserRoles = currentUser.roles || [];
-      setIsCurrentUserAdmin(currentUserRoles.includes('ADMIN'));
+      const isAdmin = currentUserRoles.includes('ADMIN');
+      setIsCurrentUserAdmin(isAdmin);
 
-      // Fetch user details from API
-      const userDetails = await getUserById(targetUserId);
-      console.log('User profile fetched:', userDetails);
+      let userDetails;
+
+      // If viewing own profile and not admin, use localStorage data
+      if (viewingOwnProfile && !isAdmin) {
+        console.log('Using localStorage data for employee profile');
+        userDetails = {
+          id: currentUser.userId,
+          username: currentUser.username,
+          email: currentUser.email,
+          bio: '', // Not stored in localStorage
+          status: 'ACTIVE', // Assume active if logged in
+          roles: currentUserRoles,
+          createdAt: new Date().toISOString() // Not available
+        };
+      } else {
+        // Admin viewing any profile or viewing another user's profile
+        console.log('Fetching user details from API');
+        userDetails = await getUserById(targetUserId);
+        console.log('User profile fetched:', userDetails);
+      }
       
       setUserData({
         id: userDetails.id,
