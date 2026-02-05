@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Input } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   AuthPageWrapper,
   AuthCard,
@@ -17,6 +17,7 @@ import {
 const Login = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const onFinish = async (values) => {
     setLoading(true);
@@ -27,6 +28,8 @@ const Login = () => {
     // Simulate API call delay
     setTimeout(() => {
       setLoading(false);
+      // Navigate to dashboard on successful login
+      navigate('/dashboard');
       // TODO: Implement actual login API call here
     }, 1000);
   };
