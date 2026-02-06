@@ -8,6 +8,7 @@ import {
   InfoCircleOutlined 
 } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { registerUser } from '../../services/authService';
 import {
   AuthPageWrapper,
@@ -29,9 +30,30 @@ const { TextArea } = Input;
 const Register = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+
+  const registerMutation = useMutation({
+    mutationFn: (formData) => registerUser(formData),
+    onSuccess: () => {
+      message.success('Registration submitted! Pending administrator approval.');
+      form.resetFields();
+      setSelectedFile(null);
+      
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    },
+    onError: (error) => {
+      if (error.fieldErrors) {
+        Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
+          message.error(`${field}: ${errorMsg}`);
+        });
+      } else {
+        message.error(error.message || 'Registration failed. Please try again.');
+      }
+    }
+  });
 
   const checkPasswordStrength = (password) => {
     if (!password) return '';
@@ -76,46 +98,24 @@ const Register = () => {
     accept: '.jpg,.jpeg,.png',
   };
 
-  const onFinish = async (values) => {
+  const onFinish = (values) => {
     if (!selectedFile) {
       message.error('Profile picture is required');
       return;
     }
     
-    setLoading(true);
+    const formData = new FormData();
+    formData.append('username', values.username);
+    formData.append('email', values.email);
+    formData.append('password', values.password);
     
-    try {
-      const formData = new FormData();
-      formData.append('username', values.username);
-      formData.append('email', values.email);
-      formData.append('password', values.password);
-      
-      if (values.bio) {
-        formData.append('bio', values.bio);
-      }
-      
-      formData.append('profilePicture', selectedFile);
-      
-      const response = await registerUser(formData);
-      message.success('Registration submitted! Pending administrator approval.');
-      form.resetFields();
-      setSelectedFile(null);
-      
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-      
-    } catch (error) {
-      if (error.fieldErrors) {
-        Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
-          message.error(`${field}: ${errorMsg}`);
-        });
-      } else {
-        message.error(error.message || 'Registration failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
+    if (values.bio) {
+      formData.append('bio', values.bio);
     }
+    
+    formData.append('profilePicture', selectedFile);
+    
+    registerMutation.mutate(formData);
   };
 
   const onFinishFailed = (errorInfo) => {
@@ -174,7 +174,7 @@ const Register = () => {
               prefix={<MailOutlined />}
               placeholder="john.doe@example.com"
               size="large"
-              disabled={loading}
+              disabled={registerMutation.isPending}
             />
           </Form.Item>
 
@@ -196,7 +196,7 @@ const Register = () => {
               prefix={<UserOutlined />}
               placeholder="john.doe"
               size="large"
-              disabled={loading}
+              disabled={registerMutation.isPending}
             />
           </Form.Item>
 
@@ -222,7 +222,7 @@ const Register = () => {
               prefix={<LockOutlined />}
               placeholder="Min 8 chars with uppercase, lowercase, number & special char"
               size="large"
-              disabled={loading}
+              disabled={registerMutation.isPending}
               onChange={handlePasswordChange}
             />
           </Form.Item>
@@ -276,7 +276,7 @@ const Register = () => {
             <StyledTextArea
               placeholder="Tell us a bit about yourself (e.g., your role, interests)..."
               rows={4}
-              disabled={loading}
+              disabled={registerMutation.isPending}
               showCount
               maxLength={500}
             />
@@ -286,8 +286,8 @@ const Register = () => {
             <CreateAccountButton
               type="primary"
               htmlType="submit"
-              loading={loading}
-              disabled={loading}
+              loading={registerMutation.isPending}
+              disabled={registerMutation.isPending}
             >
               Create Account
             </CreateAccountButton>

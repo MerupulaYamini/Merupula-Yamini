@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Form, Input, message } from 'antd';
 import { MailOutlined, LockOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import { loginUser } from '../../services/authService';
 import {
   AuthPageWrapper,
@@ -18,17 +19,12 @@ import {
 
 const Login = () => {
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const navigate = useNavigate();
 
-  const onFinish = async (values) => {
-    setLoading(true);
-    setErrorMessage('');
-    
-    try {
-      const data = await loginUser(values.email, values.password);
-      
+  const loginMutation = useMutation({
+    mutationFn: ({ email, password }) => loginUser(email, password),
+    onSuccess: (data) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('userId', data.userId);
       localStorage.setItem('username', data.username);
@@ -37,7 +33,8 @@ const Login = () => {
       
       message.success('Login successful! Welcome back.');
       navigate('/dashboard');
-    } catch (error) {
+    },
+    onError: (error) => {
       if (error.message) {
         setErrorMessage(error.message);
       } else if (error.fieldErrors) {
@@ -46,9 +43,12 @@ const Login = () => {
       } else {
         setErrorMessage('Unable to connect to the server. Please check your connection and try again.');
       }
-    } finally {
-      setLoading(false);
     }
+  });
+
+  const onFinish = (values) => {
+    setErrorMessage('');
+    loginMutation.mutate(values);
   };
 
   const onFinishFailed = (errorInfo) => {
@@ -94,7 +94,7 @@ const Login = () => {
               prefix={<MailOutlined />}
               placeholder="Enter your email"
               size="large"
-              disabled={loading}
+              disabled={loginMutation.isPending}
             />
           </Form.Item>
 
@@ -112,7 +112,7 @@ const Login = () => {
               prefix={<LockOutlined />}
               placeholder="Enter your password"
               size="large"
-              disabled={loading}
+              disabled={loginMutation.isPending}
             />
           </Form.Item>
 
@@ -124,8 +124,8 @@ const Login = () => {
             <SignInButton
               type="primary"
               htmlType="submit"
-              loading={loading}
-              disabled={loading}
+              loading={loginMutation.isPending}
+              disabled={loginMutation.isPending}
             >
               Sign In
             </SignInButton>

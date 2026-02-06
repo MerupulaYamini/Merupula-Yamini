@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { message, Modal } from 'antd';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   PlusCircleOutlined,
   SearchOutlined,
@@ -48,103 +49,119 @@ import {
 
 const DashboardContent = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
-  // State for tickets
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(false);
+  // State for pagination and filters
   const [pagination, setPagination] = useState({
     page: 0,
-    size: 10,
-    totalElements: 0,
-    totalPages: 0
+    size: 10
   });
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [labelFilter, setLabelFilter] = useState('All');
-  
-  // State for pending users
-  const [pendingUsers, setPendingUsers] = useState([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const currentUser = getCurrentUser();
   const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
 
-  // Memoized fetch function to prevent unnecessary re-creation
-  // Dependencies: pagination, search, and filters
-  const fetchTickets = useCallback(async () => {
-    setLoading(true);
-    try {
+  // Fetch tickets using React Query
+  const { data: ticketsData, isLoading: loading } = useQuery({
+    queryKey: ['tickets', pagination.page, pagination.size, searchTerm, statusFilter, labelFilter],
+    queryFn: async () => {
       const params = {
         page: pagination.page,
         size: pagination.size,
-        sort: 'createdAt,desc' // Show newest tickets first
+        sort: 'createdAt,desc'
       };
 
-      // Only add filters if they're set - keeps URL clean
       if (searchTerm) params.search = searchTerm;
       if (statusFilter !== 'All') params.status = statusFilter;
       if (labelFilter !== 'All') params.label = labelFilter;
 
       const data = await getAllTickets(params);
       
-      // Map backend data to frontend format with proper type classes for styling
       const mappedTickets = data.content.map(ticket => ({
         id: ticket.id,
         title: ticket.title,
         label: ticket.label,
-        labelType: mapLabel(ticket.label), // Convert to CSS class name
+        labelType: mapLabel(ticket.label),
         status: ticket.status,
-        statusType: mapStatus(ticket.status), // Convert to CSS class name
+        statusType: mapStatus(ticket.status),
         assignedTo: ticket.assignedToName || 'Unassigned',
         createdBy: ticket.createdByName || 'Unknown',
         createdAt: ticket.createdAt,
         updatedAt: ticket.updatedAt
       }));
 
-      setTickets(mappedTickets);
-      setPagination({
-        page: data.pageable.pageNumber,
-        size: data.pageable.pageSize,
-        totalElements: data.totalElements,
-        totalPages: data.totalPages
-      });
-    } catch (error) {
+      return {
+        tickets: mappedTickets,
+        pagination: {
+          page: data.pageable.pageNumber,
+          size: data.pageable.pageSize,
+          totalElements: data.totalElements,
+          totalPages: data.totalPages
+        }
+      };
+    },
+    onError: (error) => {
       message.error(error.message || 'Failed to load tickets');
-    } finally {
-      setLoading(false);
-    }
-  }, [pagination.page, pagination.size, searchTerm, statusFilter, labelFilter]);
+    },
+    staleTime: 30000, // 30 seconds
+    keepPreviousData: true
+  });
 
-  // Fetch tickets with debouncing for search
-  // Combined all filters into one effect to prevent multiple API calls
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchTickets();
-    }, searchTerm === '' ? 0 : 500); // Instant for clear/initial, 500ms delay for typing
+  const tickets = ticketsData?.tickets || [];
+  const paginationInfo = ticketsData?.pagination || { page: 0, size: 10, totalElements: 0, totalPages: 0 };
 
-    return () => clearTimeout(timer);
-  }, [pagination.page, statusFilter, labelFilter, searchTerm]);
-
-  // Fetch pending users only once on mount (admin only)
-  useEffect(() => {
-    if (isAdmin) {
-      fetchPendingUsers();
-    }
-  }, []);
-
-  const fetchPendingUsers = async () => {
-    setLoadingUsers(true);
-    try {
+  // Fetch pending users (admin only)
+  const { data: pendingUsers = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ['pendingUsers'],
+    queryFn: async () => {
       const users = await getAllUsers();
-      const pending = users.filter(user => user.status === 'PENDING');
-      setPendingUsers(pending);
-    } catch (error) {
-    } finally {
-      setLoadingUsers(false);
+      return users.filter(user => user.status === 'PENDING');
+    },
+    enabled: isAdmin,
+    onError: () => {
+      // Silent fail for pending users
     }
-  };
+  });
+
+  // Accept user mutation
+  const acceptUserMutation = useMutation({
+    mutationFn: (userId) => updateUserStatus(userId, 'ACTIVE'),
+    onSuccess: () => {
+      message.success('User accepted successfully');
+      queryClient.invalidateQueries(['pendingUsers']);
+    },
+    onError: (error) => {
+      message.error(error.message || 'Failed to accept user');
+    }
+  });
+
+  // Decline user mutation
+  const declineUserMutation = useMutation({
+    mutationFn: (userId) => deleteUser(userId),
+    onSuccess: () => {
+      message.success('User declined successfully');
+      queryClient.invalidateQueries(['pendingUsers']);
+    },
+    onError: (error) => {
+      message.error(error.message || 'Failed to decline user');
+    }
+  });
+
+  // Delete ticket mutation
+  const deleteTicketMutation = useMutation({
+    mutationFn: (ticketId) => deleteTicket(ticketId),
+    onSuccess: () => {
+      message.success('Ticket deleted successfully');
+      queryClient.invalidateQueries(['tickets']);
+    },
+    onError: (error) => {
+      message.error(error.message || 'Failed to delete ticket');
+    }
+  });
 
   const handleAcceptUser = (userId) => {
     Modal.confirm({
@@ -154,15 +171,7 @@ const DashboardContent = () => {
       okText: 'Accept',
       okType: 'primary',
       cancelText: 'Cancel',
-      onOk: async () => {
-        try {
-          await updateUserStatus(userId, 'ACTIVE');
-          message.success('User accepted successfully');
-          fetchPendingUsers();
-        } catch (error) {
-          message.error(error.message || 'Failed to accept user');
-        }
-      }
+      onOk: () => acceptUserMutation.mutate(userId)
     });
   };
 
@@ -174,15 +183,7 @@ const DashboardContent = () => {
       okText: 'Decline',
       okType: 'danger',
       cancelText: 'Cancel',
-      onOk: async () => {
-        try {
-          await deleteUser(userId);
-          message.success('User declined successfully');
-          fetchPendingUsers();
-        } catch (error) {
-          message.error(error.message || 'Failed to decline user');
-        }
-      }
+      onOk: () => declineUserMutation.mutate(userId)
     });
   };
 
@@ -198,17 +199,9 @@ const DashboardContent = () => {
       okText: 'Delete',
       okType: 'danger',
       cancelText: 'Cancel',
-      onOk: async () => {
-        try {
-          await deleteTicket(ticketId);
-          message.success('Ticket deleted successfully');
-          fetchTickets();
-        } catch (error) {
-          message.error(error.message || 'Failed to delete ticket');
-        }
-      }
+      onOk: () => deleteTicketMutation.mutate(ticketId)
     });
-  }, [fetchTickets]);
+  }, [deleteTicketMutation]);
 
   const handleViewTicket = useCallback((ticketId) => {
     navigate(`/ticket/${ticketId}`);
@@ -229,16 +222,16 @@ const DashboardContent = () => {
   }, []);
 
   const handlePreviousPage = useCallback(() => {
-    if (pagination.page > 0) {
+    if (paginationInfo.page > 0) {
       setPagination(prev => ({ ...prev, page: prev.page - 1 }));
     }
-  }, [pagination.page]);
+  }, [paginationInfo.page]);
 
   const handleNextPage = useCallback(() => {
-    if (pagination.page < pagination.totalPages - 1) {
+    if (paginationInfo.page < paginationInfo.totalPages - 1) {
       setPagination(prev => ({ ...prev, page: prev.page + 1 }));
     }
-  }, [pagination.page, pagination.totalPages]);
+  }, [paginationInfo.page, paginationInfo.totalPages]);
 
   const getAvatarColor = useMemo(() => (name) => {
     const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#87d068'];
@@ -417,19 +410,19 @@ const DashboardContent = () => {
         {!loading && tickets.length > 0 && (
           <PaginationContainer>
             <ShowingText>
-              Showing {pagination.page * pagination.size + 1}-{Math.min((pagination.page + 1) * pagination.size, pagination.totalElements)} of {pagination.totalElements} tickets
+              Showing {paginationInfo.page * paginationInfo.size + 1}-{Math.min((paginationInfo.page + 1) * paginationInfo.size, paginationInfo.totalElements)} of {paginationInfo.totalElements} tickets
             </ShowingText>
             <PaginationButtons>
               <PaginationButton 
                 size="small" 
-                disabled={pagination.page === 0 || loading}
+                disabled={paginationInfo.page === 0 || loading}
                 onClick={handlePreviousPage}
               >
                 Previous
               </PaginationButton>
               <PaginationButton 
                 size="small" 
-                disabled={pagination.page >= pagination.totalPages - 1 || loading}
+                disabled={paginationInfo.page >= paginationInfo.totalPages - 1 || loading}
                 onClick={handleNextPage}
               >
                 Next

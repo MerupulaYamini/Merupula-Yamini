@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message, Modal } from 'antd';
 import { 
   ArrowLeftOutlined, 
@@ -89,26 +90,20 @@ import {
 const TicketDetails = () => {
   const { ticketId } = useParams();
   const navigate = useNavigate();
-  const [ticket, setTicket] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  
   const [selectedStatus, setSelectedStatus] = useState('');
-  const [statusUpdating, setStatusUpdating] = useState(false);
   const [newComment, setNewComment] = useState('');
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [textAreaRef, setTextAreaRef] = useState(null);
 
   // Check if current user is admin
   const currentUser = getCurrentUser();
   const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
 
-  // Fetch ticket details on component mount
-  useEffect(() => {
-    fetchTicketDetails();
-  }, [ticketId]);
-
-  const fetchTicketDetails = async () => {
-    setLoading(true);
-    try {
+  // Fetch ticket details using React Query
+  const { data: ticket, isLoading: loading, error } = useQuery({
+    queryKey: ['ticket', ticketId],
+    queryFn: async () => {
       const data = await getTicketById(ticketId);
       
       // Parse attachmentMeta from backend format: "filename|contentType"
@@ -122,14 +117,52 @@ const TicketDetails = () => {
         });
       }
       
-      setTicket(data);
       setSelectedStatus(data.status);
-    } catch (error) {
+      return data;
+    },
+    onError: (error) => {
       message.error(error.message || 'Failed to load ticket details');
-    } finally {
-      setLoading(false);
     }
-  };
+  });
+
+  // Update ticket status mutation
+  const statusMutation = useMutation({
+    mutationFn: ({ ticketId, status }) => updateTicketStatus(ticketId, status),
+    onSuccess: (updatedTicket) => {
+      queryClient.setQueryData(['ticket', ticketId], updatedTicket);
+      setSelectedStatus(updatedTicket.status);
+      message.success('Ticket status updated successfully');
+    },
+    onError: (error) => {
+      message.error(error.message || 'Failed to update ticket status');
+    }
+  });
+
+  // Delete ticket mutation
+  const deleteMutation = useMutation({
+    mutationFn: (ticketId) => deleteTicket(ticketId),
+    onSuccess: () => {
+      message.success('Ticket deleted successfully');
+      queryClient.invalidateQueries(['tickets']);
+      navigate('/dashboard');
+    },
+    onError: (error) => {
+      message.error(error.message || 'Failed to delete ticket');
+    }
+  });
+
+  // Add comment mutation
+  const commentMutation = useMutation({
+    mutationFn: ({ ticketId, comment }) => addComment(ticketId, comment),
+    onSuccess: (updatedTicket) => {
+      queryClient.setQueryData(['ticket', ticketId], updatedTicket);
+      setNewComment('');
+      message.success('Comment added successfully');
+    },
+    onError: (error) => {
+      message.error(error.message || 'Failed to add comment');
+    }
+  });
 
   // Mock ticket data - in real app, this would come from API
   const mockTickets = {
@@ -364,35 +397,17 @@ const TicketDetails = () => {
       okText: 'Delete',
       okType: 'danger',
       cancelText: 'Cancel',
-      onOk: async () => {
-        try {
-          await deleteTicket(ticketId);
-          message.success('Ticket deleted successfully');
-          navigate('/dashboard');
-        } catch (error) {
-          message.error(error.message || 'Failed to delete ticket');
-        }
-      }
+      onOk: () => deleteMutation.mutate(ticketId)
     });
   };
 
-  const handleStatusUpdate = async () => {
+  const handleStatusUpdate = () => {
     if (!selectedStatus || selectedStatus === ticket.status) {
       message.warning('Please select a different status');
       return;
     }
 
-    setStatusUpdating(true);
-    try {
-      const updatedTicket = await updateTicketStatus(ticketId, selectedStatus);
-      setTicket(updatedTicket);
-      setSelectedStatus(updatedTicket.status);
-      message.success('Ticket status updated successfully');
-    } catch (error) {
-      message.error(error.message || 'Failed to update ticket status');
-    } finally {
-      setStatusUpdating(false);
-    }
+    statusMutation.mutate({ ticketId, status: selectedStatus });
   };
 
   const handleStatusChange = (e) => {
@@ -446,7 +461,7 @@ const TicketDetails = () => {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const handleAddComment = async () => {
+  const handleAddComment = () => {
     if (!newComment.trim()) {
       message.warning('Please enter a comment');
       return;
@@ -457,17 +472,7 @@ const TicketDetails = () => {
       return;
     }
 
-    setCommentSubmitting(true);
-    try {
-      const updatedTicket = await addComment(ticketId, newComment.trim());
-      setTicket(updatedTicket);
-      setNewComment('');
-      message.success('Comment added successfully');
-    } catch (error) {
-      message.error(error.message || 'Failed to add comment');
-    } finally {
-      setCommentSubmitting(false);
-    }
+    commentMutation.mutate({ ticketId, comment: newComment.trim() });
   };
 
   const handleCommentChange = (e) => {
@@ -730,7 +735,7 @@ const TicketDetails = () => {
               <StatusSelect 
                 value={selectedStatus} 
                 onChange={handleStatusChange}
-                disabled={statusUpdating}
+                disabled={statusMutation.isPending}
               >
                 <option value="TODO">Todo</option>
                 <option value="IN_PROGRESS">In Progress</option>
@@ -741,10 +746,10 @@ const TicketDetails = () => {
               </StatusSelect>
               <UpdateStatusButton 
                 onClick={handleStatusUpdate}
-                disabled={statusUpdating || selectedStatus === ticket.status}
-                loading={statusUpdating}
+                disabled={statusMutation.isPending || selectedStatus === ticket.status}
+                loading={statusMutation.isPending}
               >
-                {statusUpdating ? 'Updating...' : 'Update Status'}
+                {statusMutation.isPending ? 'Updating...' : 'Update Status'}
               </UpdateStatusButton>
             </UpdateStatusSection>
 
@@ -868,42 +873,42 @@ const TicketDetails = () => {
                   <ToolbarButton 
                     onClick={() => handleFormatToggle('bold')}
                     title="Bold - Select text first"
-                    disabled={commentSubmitting}
+                    disabled={commentMutation.isPending}
                   >
                     <BoldOutlined />
                   </ToolbarButton>
                   <ToolbarButton 
                     onClick={() => handleFormatToggle('italic')}
                     title="Italic - Select text first"
-                    disabled={commentSubmitting}
+                    disabled={commentMutation.isPending}
                   >
                     <ItalicOutlined />
                   </ToolbarButton>
                   <ToolbarButton 
                     onClick={() => handleFormatToggle('underline')}
                     title="Underline - Select text first"
-                    disabled={commentSubmitting}
+                    disabled={commentMutation.isPending}
                   >
                     <UnderlineOutlined />
                   </ToolbarButton>
                   <ToolbarButton 
                     onClick={() => insertList('unordered')}
                     title="Bullet List"
-                    disabled={commentSubmitting}
+                    disabled={commentMutation.isPending}
                   >
                     <UnorderedListOutlined />
                   </ToolbarButton>
                   <ToolbarButton 
                     onClick={() => insertList('ordered')}
                     title="Numbered List"
-                    disabled={commentSubmitting}
+                    disabled={commentMutation.isPending}
                   >
                     <OrderedListOutlined />
                   </ToolbarButton>
                   <ToolbarButton 
                     onClick={insertLink}
                     title="Insert Link - Select text first"
-                    disabled={commentSubmitting}
+                    disabled={commentMutation.isPending}
                   >
                     <LinkOutlined />
                   </ToolbarButton>
@@ -917,7 +922,7 @@ const TicketDetails = () => {
 
 💡 Tip: Select text and use the toolbar buttons above to format it!"
                   rows={6}
-                  disabled={commentSubmitting}
+                  disabled={commentMutation.isPending}
                   maxLength={5000}
                 />
                 
@@ -951,10 +956,10 @@ const TicketDetails = () => {
                   </span>
                   <AddCommentButton 
                     onClick={handleAddComment}
-                    disabled={!newComment.trim() || commentSubmitting}
-                    loading={commentSubmitting}
+                    disabled={!newComment.trim() || commentMutation.isPending}
+                    loading={commentMutation.isPending}
                   >
-                    {commentSubmitting ? 'Adding...' : 'Add Comment'}
+                    {commentMutation.isPending ? 'Adding...' : 'Add Comment'}
                   </AddCommentButton>
                 </CommentActions>
               </CommentForm>
