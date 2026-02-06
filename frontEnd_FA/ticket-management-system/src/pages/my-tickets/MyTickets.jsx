@@ -146,9 +146,11 @@ const MyTickets = () => {
             >
               <option value="All">All Status</option>
               <option value="TODO">Todo</option>
+              <option value="PAUSED">Paused</option>
               <option value="IN_PROGRESS">In Progress</option>
-              <option value="REVIEW">Review</option>
+              <option value="PR_REVIEW">PR Review</option>
               <option value="READY_TO_DEPLOY">Ready To Deploy</option>
+              <option value="DEPLOYED_DONE">Deployed Done</option>
             </FilterSelect>
             <FilterSelect 
               value={labelFilter} 
@@ -156,9 +158,11 @@ const MyTickets = () => {
               disabled={loading}
             >
               <option value="All">All Labels</option>
-              <option value="NEW_FEATURE">New Feature</option>
               <option value="BUG">Bug</option>
+              <option value="FEATURE">Feature</option>
+              <option value="TASK">Task</option>
               <option value="IMPROVEMENT">Improvement</option>
+              <option value="SUPPORT">Support</option>
             </FilterSelect>
           </TicketFilters>
         </TicketHeader>

@@ -292,11 +292,13 @@ export const deleteTicket = async (ticketId) => {
 export const mapStatus = (status) => {
   const statusMap = {
     'TODO': 'todo',
+    'PAUSED': 'paused',
     'IN_PROGRESS': 'in-progress',
-    'REVIEW': 'review',
-    'READY_TO_DEPLOY': 'ready-to-deploy'
+    'PR_REVIEW': 'pr-review',
+    'READY_TO_DEPLOY': 'ready-to-deploy',
+    'DEPLOYED_DONE': 'deployed-done'
   };
-  return statusMap[status] || status.toLowerCase();
+  return statusMap[status] || status.toLowerCase().replace(/_/g, '-');
 };
 
 /**
@@ -304,9 +306,11 @@ export const mapStatus = (status) => {
  */
 export const mapLabel = (label) => {
   const labelMap = {
-    'NEW_FEATURE': 'new-feature',
     'BUG': 'bug',
-    'IMPROVEMENT': 'improvement'
+    'FEATURE': 'feature',
+    'TASK': 'task',
+    'IMPROVEMENT': 'improvement',
+    'SUPPORT': 'support'
   };
   return labelMap[label] || label.toLowerCase();
 };
@@ -317,11 +321,13 @@ export const mapLabel = (label) => {
 export const mapStatusToBackend = (status) => {
   const statusMap = {
     'todo': 'TODO',
+    'paused': 'PAUSED',
     'in-progress': 'IN_PROGRESS',
-    'review': 'REVIEW',
-    'ready-to-deploy': 'READY_TO_DEPLOY'
+    'pr-review': 'PR_REVIEW',
+    'ready-to-deploy': 'READY_TO_DEPLOY',
+    'deployed-done': 'DEPLOYED_DONE'
   };
-  return statusMap[status] || status.toUpperCase();
+  return statusMap[status] || status.toUpperCase().replace(/-/g, '_');
 };
 
 /**
@@ -329,9 +335,11 @@ export const mapStatusToBackend = (status) => {
  */
 export const mapLabelToBackend = (label) => {
   const labelMap = {
-    'new-feature': 'NEW_FEATURE',
     'bug': 'BUG',
-    'improvement': 'IMPROVEMENT'
+    'feature': 'FEATURE',
+    'task': 'TASK',
+    'improvement': 'IMPROVEMENT',
+    'support': 'SUPPORT'
   };
   return labelMap[label] || label.toUpperCase();
 };

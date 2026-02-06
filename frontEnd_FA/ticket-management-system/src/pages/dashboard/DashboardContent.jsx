@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { message, Modal } from 'antd';
 import {
   PlusCircleOutlined,
@@ -71,7 +71,7 @@ const DashboardContent = () => {
   const currentUser = getCurrentUser();
   const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
 
-  const fetchTickets = async () => {
+  const fetchTickets = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
@@ -111,16 +111,23 @@ const DashboardContent = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.size, searchTerm, statusFilter, labelFilter]);
 
   // Fetch tickets on component mount and when filters change
   useEffect(() => {
-    fetchTickets();
-    // Only fetch pending users if admin
+    const timer = setTimeout(() => {
+      fetchTickets();
+    }, searchTerm === '' ? 0 : 500); // No delay for initial load or clear, 500ms delay for typing
+
+    return () => clearTimeout(timer);
+  }, [pagination.page, statusFilter, labelFilter, searchTerm]);
+
+  useEffect(() => {
+    // Only fetch pending users if admin on mount
     if (isAdmin) {
       fetchPendingUsers();
     }
-  }, [pagination.page, statusFilter, labelFilter]);
+  }, []);
 
   const fetchPendingUsers = async () => {
     setLoadingUsers(true);
@@ -174,22 +181,11 @@ const DashboardContent = () => {
     });
   };
 
-  // Handle search with debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchTerm !== undefined) {
-        fetchTickets();
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const handleCreateTicket = () => {
+  const handleCreateTicket = useCallback(() => {
     navigate('/create-ticket');
-  };
+  }, [navigate]);
 
-  const handleDeleteTicket = (ticketId) => {
+  const handleDeleteTicket = useCallback((ticketId) => {
     Modal.confirm({
       title: 'Delete Ticket',
       icon: <ExclamationCircleOutlined />,
@@ -207,43 +203,43 @@ const DashboardContent = () => {
         }
       }
     });
-  };
+  }, [fetchTickets]);
 
-  const handleViewTicket = (ticketId) => {
+  const handleViewTicket = useCallback((ticketId) => {
     navigate(`/ticket/${ticketId}`);
-  };
+  }, [navigate]);
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = useCallback((e) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
 
-  const handleStatusFilterChange = (e) => {
+  const handleStatusFilterChange = useCallback((e) => {
     setStatusFilter(e.target.value);
     setPagination(prev => ({ ...prev, page: 0 }));
-  };
+  }, []);
 
-  const handleLabelFilterChange = (e) => {
+  const handleLabelFilterChange = useCallback((e) => {
     setLabelFilter(e.target.value);
     setPagination(prev => ({ ...prev, page: 0 }));
-  };
+  }, []);
 
-  const handlePreviousPage = () => {
+  const handlePreviousPage = useCallback(() => {
     if (pagination.page > 0) {
       setPagination(prev => ({ ...prev, page: prev.page - 1 }));
     }
-  };
+  }, [pagination.page]);
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (pagination.page < pagination.totalPages - 1) {
       setPagination(prev => ({ ...prev, page: prev.page + 1 }));
     }
-  };
+  }, [pagination.page, pagination.totalPages]);
 
-  const getAvatarColor = (name) => {
+  const getAvatarColor = useMemo(() => (name) => {
     const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#87d068'];
     const index = name.charCodeAt(0) % colors.length;
     return colors[index];
-  };
+  }, []);
 
   return (
     <>
@@ -341,9 +337,11 @@ const DashboardContent = () => {
             >
               <option value="All">All Status</option>
               <option value="TODO">Todo</option>
+              <option value="PAUSED">Paused</option>
               <option value="IN_PROGRESS">In Progress</option>
-              <option value="REVIEW">Review</option>
+              <option value="PR_REVIEW">PR Review</option>
               <option value="READY_TO_DEPLOY">Ready To Deploy</option>
+              <option value="DEPLOYED_DONE">Deployed Done</option>
             </FilterSelect>
             <FilterSelect 
               value={labelFilter} 
@@ -351,9 +349,11 @@ const DashboardContent = () => {
               disabled={loading}
             >
               <option value="All">All Labels</option>
-              <option value="NEW_FEATURE">New Feature</option>
               <option value="BUG">Bug</option>
+              <option value="FEATURE">Feature</option>
+              <option value="TASK">Task</option>
               <option value="IMPROVEMENT">Improvement</option>
+              <option value="SUPPORT">Support</option>
             </FilterSelect>
           </TicketFilters>
         </TicketHeader>

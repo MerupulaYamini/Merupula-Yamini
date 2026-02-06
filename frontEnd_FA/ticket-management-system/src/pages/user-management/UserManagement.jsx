@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { message, Modal } from 'antd';
 import {
   SearchOutlined,
@@ -41,7 +41,7 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const usersData = await getAllUsers();
@@ -69,9 +69,9 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const handleDeleteUser = (userId, username) => {
+  const handleDeleteUser = useCallback((userId, username) => {
     Modal.confirm({
       title: 'Delete User',
       icon: <ExclamationCircleOutlined />,
@@ -89,9 +89,9 @@ const UserManagement = () => {
         }
       }
     });
-  };
+  }, [fetchUsers]);
 
-  const handleRoleChange = (userId, username, currentRole, newRole) => {
+  const handleRoleChange = useCallback((userId, username, currentRole, newRole) => {
     Modal.confirm({
       title: 'Update User Role',
       icon: <ExclamationCircleOutlined />,
@@ -109,24 +109,26 @@ const UserManagement = () => {
         }
       }
     });
-  };
+  }, [fetchUsers]);
 
-  const handleViewUser = (userId) => {
+  const handleViewUser = useCallback((userId) => {
     navigate(`/profile/${userId}`);
-  };
+  }, [navigate]);
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = useCallback((e) => {
     setSearchTerm(e.target.value);
-  };
+  }, []);
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
-    const matchesRole = roleFilter === 'All' || (user.roles && user.roles.includes(roleFilter));
-    
-    return matchesSearch && matchesStatus && matchesRole;
-  });
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
+      const matchesRole = roleFilter === 'All' || (user.roles && user.roles.includes(roleFilter));
+      
+      return matchesSearch && matchesStatus && matchesRole;
+    });
+  }, [users, searchTerm, statusFilter, roleFilter]);
 
   const getAvatarColor = (name) => {
     const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#87d068'];

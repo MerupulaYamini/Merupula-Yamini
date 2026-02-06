@@ -479,19 +479,29 @@ export const LabelTag = styled.span`
   font-weight: 500;
   display: inline-block;
   
-  &.new-feature {
-    background-color: #e6f7ff;
-    color: #1890ff;
-  }
-  
   &.bug {
     background-color: #fff2e8;
     color: #fa541c;
   }
   
+  &.feature {
+    background-color: #e6f7ff;
+    color: #1890ff;
+  }
+  
+  &.task {
+    background-color: #f9f0ff;
+    color: #722ed1;
+  }
+  
   &.improvement {
     background-color: #f6ffed;
     color: #52c41a;
+  }
+  
+  &.support {
+    background-color: #fff7e6;
+    color: #fa8c16;
   }
   
   @media (max-width: ${breakpoints.tablet}) {
@@ -517,22 +527,32 @@ export const StatusTag = styled.span`
   font-weight: 500;
   display: inline-block;
   
-  &.in-progress {
-    background-color: #e6f7ff;
-    color: #1890ff;
-  }
-  
   &.todo {
     background-color: #f0f0f0;
     color: #8c8c8c;
   }
   
-  &.review {
+  &.paused {
+    background-color: #fff1f0;
+    color: #cf1322;
+  }
+  
+  &.in-progress {
+    background-color: #e6f7ff;
+    color: #1890ff;
+  }
+  
+  &.pr-review {
+    background-color: #f9f0ff;
+    color: #722ed1;
+  }
+  
+  &.ready-to-deploy {
     background-color: #fff7e6;
     color: #fa8c16;
   }
   
-  &.ready-to-deploy {
+  &.deployed-done {
     background-color: #f6ffed;
     color: #52c41a;
   }
