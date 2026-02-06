@@ -109,6 +109,18 @@ const TicketDetails = () => {
     setLoading(true);
     try {
       const data = await getTicketById(ticketId);
+      
+      // Parse attachmentMeta from backend format: "filename|contentType"
+      if (data.attachmentMeta && Array.isArray(data.attachmentMeta)) {
+        data.attachmentMeta = data.attachmentMeta.map((metaString) => {
+          const [filename, contentType] = metaString.split('|');
+          return {
+            filename: filename || 'Unknown file',
+            contentType: contentType || 'application/octet-stream'
+          };
+        });
+      }
+      
       setTicket(data);
       setSelectedStatus(data.status);
     } catch (error) {
@@ -661,7 +673,7 @@ const TicketDetails = () => {
                         </AttachmentIcon>
                         <AttachmentInfo>
                           <AttachmentName>{attachment.filename}</AttachmentName>
-                          <AttachmentSize>{formatFileSize(attachment.size)}</AttachmentSize>
+                          <AttachmentSize>Click to download</AttachmentSize>
                         </AttachmentInfo>
                       </AttachmentItem>
                     ))}
@@ -684,8 +696,14 @@ const TicketDetails = () => {
                       >
                         <AttachmentIcon>🔗</AttachmentIcon>
                         <AttachmentInfo>
-                          <AttachmentName>{url}</AttachmentName>
-                          <AttachmentSize>External URL</AttachmentSize>
+                          <AttachmentName style={{ 
+                            color: '#1890ff', 
+                            textDecoration: 'underline',
+                            wordBreak: 'break-all'
+                          }}>
+                            {url}
+                          </AttachmentName>
+                          <AttachmentSize>Click to open in new tab</AttachmentSize>
                         </AttachmentInfo>
                       </AttachmentItem>
                     ))}

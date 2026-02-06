@@ -1,4 +1,5 @@
 import { getAuthHeaders } from './authService';
+import { fetchWithAuth } from '../utils/apiInterceptor';
 
 const API_BASE_URL = '/api';
 
@@ -29,7 +30,7 @@ export const getAllTickets = async (params = {}) => {
     const queryString = queryParams.toString();
     const url = `${API_BASE_URL}/tickets${queryString ? `?${queryString}` : ''}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -79,7 +80,7 @@ export const getMyTickets = async (params = {}) => {
     const queryString = queryParams.toString();
     const url = `${API_BASE_URL}/tickets/my-tickets${queryString ? `?${queryString}` : ''}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -117,7 +118,7 @@ export const getMyTickets = async (params = {}) => {
  */
 export const getTicketById = async (ticketId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/tickets/${ticketId}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -191,7 +192,7 @@ export const createTicket = async (ticketData) => {
     
     const url = `${API_BASE_URL}/tickets`;
     
-    const response = await fetch(url, {
+    const response = await fetchWithAuth(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -235,7 +236,7 @@ export const createTicket = async (ticketData) => {
  */
 export const updateTicket = async (ticketId, ticketData) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/tickets/${ticketId}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(ticketData),
@@ -265,7 +266,7 @@ export const updateTicket = async (ticketId, ticketData) => {
  */
 export const deleteTicket = async (ticketId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/tickets/${ticketId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -355,7 +356,7 @@ export const getTicketAttachmentUrl = (ticketId, index) => {
 export const downloadTicketAttachment = async (ticketId, index, filename) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/attachments/${index}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/tickets/${ticketId}/attachments/${index}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -401,7 +402,7 @@ export const downloadTicketAttachment = async (ticketId, index, filename) => {
  */
 export const updateTicketStatus = async (ticketId, status) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/status`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/tickets/${ticketId}/status`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ status }),
@@ -441,7 +442,7 @@ export const updateTicketStatus = async (ticketId, status) => {
  */
 export const addComment = async (ticketId, content) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/comments`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/tickets/${ticketId}/comments`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({ content }),

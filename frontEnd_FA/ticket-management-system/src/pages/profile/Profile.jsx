@@ -368,10 +368,10 @@ const Profile = () => {
                           icon={<UploadOutlined />} 
                           disabled={profileLoading}
                         >
-                          Upload Avatar
+                          Upload Picture
                         </UploadButton>
                       </Upload>
-                      <UploadHint>Upload a new avatar. Max file size: 2MB. (PNG, JPG, GIF)</UploadHint>
+                      <UploadHint>Upload a new picture. Max file size: 2MB. (PNG, JPG, GIF)</UploadHint>
                       {selectedFile && (
                         <UploadHint style={{ color: '#52c41a', marginTop: '4px' }}>
                           Selected: {selectedFile.name}

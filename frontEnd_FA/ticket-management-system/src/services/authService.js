@@ -1,3 +1,5 @@
+import { fetchWithAuth } from '../utils/apiInterceptor';
+
 // Base API URL - using relative path to leverage Vite proxy
 const API_BASE_URL = '/api';
 
@@ -100,7 +102,7 @@ export const registerUser = async (formData) => {
 export const logoutUser = async () => {
   const token = localStorage.getItem('token');
   
-  const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+  const response = await fetchWithAuth(`${API_BASE_URL}/auth/logout`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -161,7 +163,7 @@ export const getCurrentUser = () => {
  */
 export const getMyProfile = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/profile/me`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/profile/me`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -201,7 +203,7 @@ export const updateMyProfile = async (formData) => {
   try {
     const token = localStorage.getItem('token');
     
-    const response = await fetch(`${API_BASE_URL}/profile`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/profile`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -248,7 +250,7 @@ export const updateMyProfile = async (formData) => {
  */
 export const changePassword = async (oldPassword, newPassword) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/profile/password`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/profile/password`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ oldPassword, newPassword }),
@@ -287,7 +289,7 @@ export const changePassword = async (oldPassword, newPassword) => {
  */
 export const getAllUsers = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/users`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/admin/users`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -325,7 +327,7 @@ export const getAllUsers = async () => {
  */
 export const getUserById = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/admin/users/${userId}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -364,7 +366,7 @@ export const getUserById = async (userId) => {
  */
 export const updateUserStatus = async (userId, status) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/admin/users/${userId}/status`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ status }),
@@ -403,7 +405,7 @@ export const updateUserStatus = async (userId, status) => {
  */
 export const deleteUser = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/admin/users/${userId}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -439,7 +441,7 @@ export const deleteUser = async (userId) => {
  */
 export const adminResetUserPassword = async (userId, newPassword) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/password`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/admin/users/${userId}/password`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ newPassword }),
@@ -480,7 +482,7 @@ export const adminResetUserPassword = async (userId, newPassword) => {
 export const getUserProfilePicture = async (userId) => {
   try {
     const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/profile/${userId}/picture`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/profile/${userId}/picture`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,

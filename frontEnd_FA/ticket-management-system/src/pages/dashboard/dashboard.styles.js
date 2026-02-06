@@ -384,7 +384,7 @@ export const TicketTable = styled.div`
 
 export const TableHeader = styled.div`
   display: grid;
-  grid-template-columns: 100px 2fr 120px 120px 150px 120px 100px;
+  grid-template-columns: 100px minmax(150px, 250px) 110px 130px 140px 120px 100px;
   background: #fafafa;
   border-bottom: 2px solid #e8e8e8;
   padding: 16px;
@@ -392,10 +392,12 @@ export const TableHeader = styled.div`
   color: #8c8c8c;
   font-size: 12px;
   text-transform: uppercase;
+  gap: 12px;
   
   @media (max-width: ${breakpoints.large}) {
-    grid-template-columns: 80px 2fr 100px 100px 120px 100px 80px;
+    grid-template-columns: 80px minmax(120px, 200px) 100px 110px 120px 100px 80px;
     font-size: 11px;
+    gap: 8px;
   }
   
   @media (max-width: ${breakpoints.tablet}) {
@@ -405,11 +407,12 @@ export const TableHeader = styled.div`
 
 export const TableRow = styled.div`
   display: grid;
-  grid-template-columns: 100px 2fr 120px 120px 150px 120px 100px;
+  grid-template-columns: 100px minmax(150px, 250px) 110px 130px 140px 120px 100px;
   padding: 16px;
   border-bottom: 1px solid #e8e8e8;
   align-items: center;
   transition: all 0.2s ease;
+  gap: 12px;
   
   &:hover {
     background-color: #f8f9fa;
@@ -418,7 +421,8 @@ export const TableRow = styled.div`
   }
   
   @media (max-width: ${breakpoints.large}) {
-    grid-template-columns: 80px 2fr 100px 100px 120px 100px 80px;
+    grid-template-columns: 80px minmax(120px, 200px) 100px 110px 120px 100px 80px;
+    gap: 8px;
   }
   
   @media (max-width: ${breakpoints.tablet}) {
@@ -455,12 +459,16 @@ export const TicketTitle = styled.span`
   color: #262626;
   font-size: 14px;
   font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   
   @media (max-width: ${breakpoints.tablet}) {
     display: block;
     margin-bottom: 8px;
     font-size: 15px;
     font-weight: 600;
+    white-space: normal;
   }
 `;
 
