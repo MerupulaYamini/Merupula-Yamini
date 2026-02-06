@@ -34,7 +34,8 @@ const MainLayout = ({ children }) => {
   const currentUser = getCurrentUser();
   const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
   
-  // Load profile picture
+  // Load profile picture on mount
+  // Same blob URL approach as Profile page - works well with auth headers
   useEffect(() => {
     const loadProfilePicture = async () => {
       if (currentUser.userId) {
@@ -45,14 +46,14 @@ const MainLayout = ({ children }) => {
           setProfilePictureError(false);
         } catch (error) {
           console.error('Failed to load profile picture:', error);
-          setProfilePictureError(true);
+          setProfilePictureError(true); // Fall back to default avatar
         }
       }
     };
     
     loadProfilePicture();
     
-    // Cleanup function to revoke object URL
+    // Cleanup to prevent memory leaks
     return () => {
       if (profilePictureUrl) {
         URL.revokeObjectURL(profilePictureUrl);
@@ -64,19 +65,22 @@ const MainLayout = ({ children }) => {
     setProfilePictureError(true);
   };
   
-  // Get current page from URL path
+  // Get current page from URL path for menu highlighting
+  // This keeps the menu in sync when navigating via browser back/forward
   const getCurrentKey = () => {
     const path = location.pathname;
     if (path === '/dashboard') return 'dashboard';
     if (path === '/user-management') return 'user-management';
     if (path === '/create-ticket') return 'create-ticket';
     if (path === '/my-tickets') return 'my-tickets';
-    return 'dashboard';
+    return 'dashboard'; // Default fallback
   };
 
   const [selectedKey, setSelectedKey] = useState(getCurrentKey());
 
   // Build menu items based on user role
+  // Admin sees User Management + Create Ticket
+  // Employee sees View My Tickets instead
   const menuItems = [
     {
       key: 'dashboard',
@@ -99,7 +103,7 @@ const MainLayout = ({ children }) => {
       icon: <AppstoreOutlined />,
       label: 'View My Tickets',
     }]),
-    // Logout button at the bottom
+    // Logout button at the bottom - fixed position via CSS
     {
       key: 'logout',
       icon: <LogoutOutlined />,
@@ -110,14 +114,14 @@ const MainLayout = ({ children }) => {
   ];
 
   const handleMenuClick = (e) => {
-    // Handle logout separately
+    // Handle logout separately with confirmation modal
     if (e.key === 'logout') {
       handleLogoutClick();
       return;
     }
 
     setSelectedKey(e.key);
-    setSidebarOpen(false); // Close sidebar on mobile after selection
+    setSidebarOpen(false); // Close sidebar on mobile after selection - better UX
     
     // Navigate to the selected page
     switch (e.key) {
@@ -138,6 +142,7 @@ const MainLayout = ({ children }) => {
     }
   };
 
+  // Logout with confirmation - prevents accidental logouts
   const handleLogoutClick = () => {
     Modal.confirm({
       title: 'Confirm Logout',
@@ -152,6 +157,8 @@ const MainLayout = ({ children }) => {
           message.success('Logged out successfully');
           navigate('/login');
         } catch (error) {
+          // Even if API fails, clear local storage and redirect
+          // Better to force logout than leave user in weird state
           localStorage.clear();
           message.info('Logged out');
           navigate('/login');

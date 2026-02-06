@@ -5,6 +5,7 @@ const API_BASE_URL = '/api';
 
 /**
  * Get all tickets with optional filters and pagination
+ * Backend supports flexible filtering which is great for the dashboard
  * @param {Object} params - Query parameters
  * @param {string} params.search - Search in title/description
  * @param {string} params.status - Filter by status (TODO, IN_PROGRESS, REVIEW, READY_TO_DEPLOY)
@@ -17,6 +18,7 @@ const API_BASE_URL = '/api';
  */
 export const getAllTickets = async (params = {}) => {
   try {
+    // Build query string from params - only include non-empty values
     const queryParams = new URLSearchParams();
     
     if (params.search) queryParams.append('search', params.search);
@@ -151,6 +153,8 @@ export const getTicketById = async (ticketId) => {
 
 /**
  * Create a new ticket with multipart/form-data
+ * Had to use FormData here because we're uploading files
+ * Can't use JSON when sending files - that was a learning moment
  * @param {Object} ticketData - Ticket data
  * @param {string} ticketData.title - Required, max 150 characters
  * @param {string} ticketData.description - Required
@@ -162,6 +166,7 @@ export const getTicketById = async (ticketId) => {
  */
 export const createTicket = async (ticketData) => {
   try {
+    // FormData for file uploads - can't use JSON here
     const formData = new FormData();
     
     formData.append('title', ticketData.title);
@@ -169,12 +174,14 @@ export const createTicket = async (ticketData) => {
     formData.append('label', ticketData.label);
     formData.append('assignedToUserId', ticketData.assignedToUserId);
     
+    // Add file attachments if any
     if (ticketData.attachments && ticketData.attachments.length > 0) {
       ticketData.attachments.forEach((file) => {
         formData.append('attachments', file);
       });
     }
     
+    // Add URL attachments if any
     if (ticketData.attachmentUrls && ticketData.attachmentUrls.length > 0) {
       ticketData.attachmentUrls.forEach((url) => {
         formData.append('attachmentUrls', url);
@@ -288,6 +295,7 @@ export const deleteTicket = async (ticketId) => {
 
 /**
  * Map backend status to frontend format
+ * Backend uses SCREAMING_SNAKE_CASE, we use kebab-case for CSS classes
  */
 export const mapStatus = (status) => {
   const statusMap = {
@@ -303,6 +311,7 @@ export const mapStatus = (status) => {
 
 /**
  * Map backend label to frontend format
+ * Keeps things consistent across the UI
  */
 export const mapLabel = (label) => {
   const labelMap = {

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Input, Upload, message } from 'antd';
+import { Form, Input, Upload, message, Modal } from 'antd';
 import { UserOutlined, UploadOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
-import { getUserById, getCurrentUser, getMyProfile, updateMyProfile, changePassword, adminResetUserPassword, getUserProfilePicture } from '../../services/authService';
+import { getUserById, getCurrentUser, getMyProfile, updateMyProfile, changePassword, adminResetUserPassword, getUserProfilePicture, logoutUser } from '../../services/authService';
 import {
   ProfileContainer,
   ProfileHeader,
@@ -59,11 +59,12 @@ const Profile = () => {
     avatar: null
   });
 
-  // Fetch user profile data
+  // Fetch user profile data on mount and when userId changes
   useEffect(() => {
     fetchUserProfile();
     
-    // Cleanup function to revoke object URL
+    // Important: cleanup to prevent memory leaks from blob URLs
+    // Learned this the hard way when profile pictures kept accumulating in memory
     return () => {
       if (profilePictureUrl) {
         URL.revokeObjectURL(profilePictureUrl);
@@ -110,7 +111,8 @@ const Profile = () => {
         avatar: null
       });
 
-      // Load profile picture
+      // Load profile picture as blob and create object URL
+      // This approach works better than direct img src because we need auth headers
       if (userDetails.id) {
         try {
           const blob = await getUserProfilePicture(userDetails.id);
@@ -119,7 +121,7 @@ const Profile = () => {
           setProfilePictureError(false);
         } catch (error) {
           console.error('Failed to load profile picture:', error);
-          setProfilePictureError(true);
+          setProfilePictureError(true); // Show default avatar on error
         }
       }
 
@@ -170,13 +172,36 @@ const Profile = () => {
     }
   };
 
+  // Password change requires logout for security
+  // This is a common pattern - force re-authentication after password change
   const handlePasswordUpdate = async (values) => {
     setPasswordLoading(true);
     
     try {
       await changePassword(values.currentPassword, values.newPassword);
-      message.success('Password updated successfully!');
       passwordForm.resetFields();
+      
+      // Show success modal and logout - security best practice
+      Modal.success({
+        title: 'Password Changed Successfully!',
+        content: 'Your password has been updated. You will be logged out for security reasons. Please login again with your new password.',
+        okText: 'OK',
+        onOk: async () => {
+          try {
+            await logoutUser();
+            navigate('/login');
+          } catch (error) {
+            // Even if logout API fails, clear local storage and redirect
+            // Better to be safe and force re-login
+            localStorage.removeItem('token');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('username');
+            localStorage.removeItem('email');
+            localStorage.removeItem('roles');
+            navigate('/login');
+          }
+        },
+      });
     } catch (error) {
       if (error.fieldErrors) {
         Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
@@ -234,6 +259,8 @@ const Profile = () => {
     message.info('Admin password reset cancelled');
   };
 
+  // Upload validation - prevent large files and wrong formats
+  // Return false to prevent auto-upload, we handle it manually on form submit
   const uploadProps = {
     beforeUpload: (file) => {
       const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/gif';
@@ -250,7 +277,7 @@ const Profile = () => {
 
       setSelectedFile(file);
       message.success('Profile picture selected. Click "Save Changes" to upload.');
-      return false;
+      return false; // Prevent auto-upload, we'll handle it in form submit
     },
     showUploadList: false,
   };

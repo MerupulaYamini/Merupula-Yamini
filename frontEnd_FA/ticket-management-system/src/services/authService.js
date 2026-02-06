@@ -19,6 +19,7 @@ export const loginUser = async (email, password) => {
       body: JSON.stringify({ email, password }),
     });
 
+    // Check if response is JSON - had issues with CORS returning HTML error pages
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
@@ -35,13 +36,14 @@ export const loginUser = async (email, password) => {
       throw {
         status: response.status,
         message: data.message || 'Login failed',
-        fieldErrors: data.fieldErrors || null,
+        fieldErrors: data.fieldErrors || null, // Backend sends field-specific errors
         data
       };
     }
 
     return data;
   } catch (error) {
+    // Catch CORS errors specifically - spent hours debugging this!
     if (error.message && error.message.includes('JSON')) {
       throw {
         status: 0,
@@ -64,6 +66,7 @@ export const registerUser = async (formData) => {
   try {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
+      // Note: Don't set Content-Type header for FormData - browser handles it automatically with boundary
       body: formData,
     });
 
@@ -84,7 +87,7 @@ export const registerUser = async (formData) => {
       throw {
         status: response.status,
         message: data.message || 'Registration failed',
-        fieldErrors: data.fieldErrors || null,
+        fieldErrors: data.fieldErrors || null, // Display validation errors per field
         data
       };
     }

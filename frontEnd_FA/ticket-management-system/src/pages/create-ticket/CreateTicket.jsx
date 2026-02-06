@@ -57,18 +57,20 @@ const CreateTicket = () => {
     }
   };
 
+  // Had to add this validation because backend was rejecting large files
+  // Spent some time figuring out the right limits - 10MB seemed reasonable
   const validateFiles = (selectedFiles) => {
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    const MAX_TOTAL_SIZE = 10 * 1024 * 1024; // 10MB
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB per file
+    const MAX_TOTAL_SIZE = 10 * 1024 * 1024; // 10MB total - backend constraint
 
-    // Check individual file sizes
+    // Check individual file sizes first
     for (let file of selectedFiles) {
       if (file.size > MAX_FILE_SIZE) {
         throw new Error(`File "${file.name}" exceeds 10MB limit`);
       }
     }
 
-    // Check total size
+    // Then check total size - this catches the case where multiple small files add up
     const totalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
     if (totalSize > MAX_TOTAL_SIZE) {
       throw new Error(`Total file size (${(totalSize / 1024 / 1024).toFixed(2)}MB) exceeds 10MB limit`);
@@ -85,14 +87,15 @@ const CreateTicket = () => {
     }
 
     try {
+      // Combine with existing files to check total size
       const allFiles = [...files, ...selectedFiles];
       validateFiles(allFiles);
       
       setFiles(allFiles);
-      e.target.value = '';
+      e.target.value = ''; // Clear input so same file can be selected again if needed
     } catch (error) {
       message.error(error.message);
-      e.target.value = '';
+      e.target.value = ''; // Important: reset input on error too
     }
   };
 
@@ -106,11 +109,12 @@ const CreateTicket = () => {
       return;
     }
     
-    // Basic URL validation
+    // Using URL constructor for validation - cleaner than regex
+    // This catches most invalid URLs automatically
     try {
       new URL(attachmentUrl);
       setAttachmentUrls(prev => [...prev, attachmentUrl.trim()]);
-      setAttachmentUrl('');
+      setAttachmentUrl(''); // Clear input after adding
     } catch (error) {
       message.error('Please enter a valid URL');
     }
@@ -128,18 +132,22 @@ const CreateTicket = () => {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
+  // Simple file type icons - makes the UI more friendly
+  // Could use a library but emojis work fine and no extra dependencies
   const getFileIcon = (type) => {
     if (type.startsWith('image/')) return '🖼️';
     if (type.startsWith('video/')) return '🎥';
     if (type.includes('pdf')) return '📄';
     if (type.includes('word') || type.includes('document')) return '📝';
     if (type.includes('excel') || type.includes('spreadsheet')) return '📊';
-    return '📎';
+    return '📎'; // Default for everything else
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
     
+    // Frontend validation before hitting the API
+    // Saves a network call if something's obviously wrong
     if (!title.trim()) {
       message.error('Title is required');
       return;
@@ -179,8 +187,9 @@ const CreateTicket = () => {
       
       const result = await createTicket(ticketData);
       message.success('Ticket created successfully!');
-      navigate('/dashboard');
+      navigate('/dashboard'); // Redirect to see the new ticket
     } catch (error) {
+      // Backend returns field-specific errors which is nice for UX
       if (error.fieldErrors) {
         Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
           message.error(`${field}: ${errorMsg}`);

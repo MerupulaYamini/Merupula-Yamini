@@ -71,28 +71,32 @@ const DashboardContent = () => {
   const currentUser = getCurrentUser();
   const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
 
+  // Memoized fetch function to prevent unnecessary re-creation
+  // Dependencies: pagination, search, and filters
   const fetchTickets = useCallback(async () => {
     setLoading(true);
     try {
       const params = {
         page: pagination.page,
         size: pagination.size,
-        sort: 'createdAt,desc'
+        sort: 'createdAt,desc' // Show newest tickets first
       };
 
+      // Only add filters if they're set - keeps URL clean
       if (searchTerm) params.search = searchTerm;
       if (statusFilter !== 'All') params.status = statusFilter;
       if (labelFilter !== 'All') params.label = labelFilter;
 
       const data = await getAllTickets(params);
       
+      // Map backend data to frontend format with proper type classes for styling
       const mappedTickets = data.content.map(ticket => ({
         id: ticket.id,
         title: ticket.title,
         label: ticket.label,
-        labelType: mapLabel(ticket.label),
+        labelType: mapLabel(ticket.label), // Convert to CSS class name
         status: ticket.status,
-        statusType: mapStatus(ticket.status),
+        statusType: mapStatus(ticket.status), // Convert to CSS class name
         assignedTo: ticket.assignedToName || 'Unassigned',
         createdBy: ticket.createdByName || 'Unknown',
         createdAt: ticket.createdAt,
@@ -113,17 +117,18 @@ const DashboardContent = () => {
     }
   }, [pagination.page, pagination.size, searchTerm, statusFilter, labelFilter]);
 
-  // Fetch tickets on component mount and when filters change
+  // Fetch tickets with debouncing for search
+  // Combined all filters into one effect to prevent multiple API calls
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchTickets();
-    }, searchTerm === '' ? 0 : 500); // No delay for initial load or clear, 500ms delay for typing
+    }, searchTerm === '' ? 0 : 500); // Instant for clear/initial, 500ms delay for typing
 
     return () => clearTimeout(timer);
   }, [pagination.page, statusFilter, labelFilter, searchTerm]);
 
+  // Fetch pending users only once on mount (admin only)
   useEffect(() => {
-    // Only fetch pending users if admin on mount
     if (isAdmin) {
       fetchPendingUsers();
     }

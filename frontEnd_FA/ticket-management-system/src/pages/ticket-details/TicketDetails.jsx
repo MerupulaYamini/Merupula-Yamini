@@ -481,6 +481,7 @@ const TicketDetails = () => {
     const end = textAreaRef.selectionEnd;
     const selectedText = newComment.substring(start, end);
     
+    // Require text selection for better UX - prevents accidental empty formatting
     if (!selectedText) {
       message.info('Please select text first to apply formatting');
       return;
@@ -492,7 +493,7 @@ const TicketDetails = () => {
     const newText = beforeText + prefix + selectedText + suffix + afterText;
     setNewComment(newText);
     
-    // Select the formatted text
+    // Keep the formatted text selected so user can see what was applied
     setTimeout(() => {
       textAreaRef.focus();
       textAreaRef.setSelectionRange(start, start + prefix.length + selectedText.length + suffix.length);

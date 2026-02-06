@@ -41,11 +41,15 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
+  // Had to fetch user details separately to get roles
+  // The getAllUsers endpoint doesn't include roles, so we make individual calls
+  // Not the most efficient but works fine for small user lists
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const usersData = await getAllUsers();
       
+      // Fetch detailed info for each user to get their roles
       const usersWithRoles = await Promise.all(
         usersData.map(async (user) => {
           try {
@@ -55,6 +59,7 @@ const UserManagement = () => {
               roles: userDetails.roles || ['EMPLOYEE']
             };
           } catch (error) {
+            // If we can't get details, assume they're an employee
             return {
               ...user,
               roles: ['EMPLOYEE']
@@ -91,6 +96,8 @@ const UserManagement = () => {
     });
   }, [fetchUsers]);
 
+  // Role changes are critical, so we confirm before making the change
+  // This prevents accidental clicks from messing up permissions
   const handleRoleChange = useCallback((userId, username, currentRole, newRole) => {
     Modal.confirm({
       title: 'Update User Role',
@@ -103,7 +110,7 @@ const UserManagement = () => {
         try {
           await updateUserRole(userId, newRole);
           message.success(`User role updated to ${newRole} successfully`);
-          fetchUsers();
+          fetchUsers(); // Refresh to show updated role
         } catch (error) {
           message.error(error.message || 'Failed to update user role');
         }
@@ -119,6 +126,8 @@ const UserManagement = () => {
     setSearchTerm(e.target.value);
   }, []);
 
+  // Client-side filtering - works great for small user lists
+  // Using useMemo here to avoid re-filtering on every render
   const filteredUsers = useMemo(() => {
     return users.filter(user => {
       const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
