@@ -95,6 +95,7 @@ const TicketDetails = () => {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [textAreaRef, setTextAreaRef] = useState(null);
 
   // Check if current user is admin
   const currentUser = getCurrentUser();
@@ -473,16 +474,113 @@ const TicketDetails = () => {
     setNewComment(e.target.value);
   };
 
+  const insertFormatting = (prefix, suffix = '') => {
+    if (!textAreaRef) return;
+    
+    const start = textAreaRef.selectionStart;
+    const end = textAreaRef.selectionEnd;
+    const selectedText = newComment.substring(start, end);
+    const beforeText = newComment.substring(0, start);
+    const afterText = newComment.substring(end);
+    
+    const newText = beforeText + prefix + selectedText + suffix + afterText;
+    setNewComment(newText);
+    
+    // Set cursor position after formatting
+    setTimeout(() => {
+      const newCursorPos = start + prefix.length + selectedText.length + suffix.length;
+      textAreaRef.focus();
+      textAreaRef.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
+  };
+
   const handleFormatToggle = (format) => {
-    message.info('Text formatting not implemented yet');
+    switch (format) {
+      case 'bold':
+        insertFormatting('**', '**');
+        break;
+      case 'italic':
+        insertFormatting('*', '*');
+        break;
+      case 'underline':
+        insertFormatting('__', '__');
+        break;
+      default:
+        break;
+    }
   };
 
   const insertList = (type) => {
-    message.info('List insertion not implemented yet');
+    if (!textAreaRef) return;
+    
+    const start = textAreaRef.selectionStart;
+    const beforeText = newComment.substring(0, start);
+    const afterText = newComment.substring(start);
+    
+    const listPrefix = type === 'ordered' ? '1. ' : '- ';
+    const newText = beforeText + (beforeText && !beforeText.endsWith('\n') ? '\n' : '') + listPrefix + afterText;
+    
+    setNewComment(newText);
+    
+    setTimeout(() => {
+      const newCursorPos = start + (beforeText && !beforeText.endsWith('\n') ? 1 : 0) + listPrefix.length;
+      textAreaRef.focus();
+      textAreaRef.setSelectionRange(newCursorPos, newCursorPos);
+    }, 0);
   };
 
   const insertLink = () => {
-    message.info('Link insertion not implemented yet');
+    if (!textAreaRef) return;
+    
+    const start = textAreaRef.selectionStart;
+    const end = textAreaRef.selectionEnd;
+    const selectedText = newComment.substring(start, end);
+    const beforeText = newComment.substring(0, start);
+    const afterText = newComment.substring(end);
+    
+    const linkText = selectedText || 'link text';
+    const linkFormat = `[${linkText}](url)`;
+    const newText = beforeText + linkFormat + afterText;
+    
+    setNewComment(newText);
+    
+    setTimeout(() => {
+      // Select "url" part for easy replacement
+      const urlStart = start + linkText.length + 3;
+      const urlEnd = urlStart + 3;
+      textAreaRef.focus();
+      textAreaRef.setSelectionRange(urlStart, urlEnd);
+    }, 0);
+  };
+
+  const renderFormattedComment = (text) => {
+    if (!text) return text;
+    
+    // Convert markdown-style formatting to HTML
+    let formatted = text;
+    
+    // Bold: **text** -> <strong>text</strong>
+    formatted = formatted.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    
+    // Italic: *text* -> <em>text</em>
+    formatted = formatted.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    
+    // Underline: __text__ -> <u>text</u>
+    formatted = formatted.replace(/__(.+?)__/g, '<u>$1</u>');
+    
+    // Links: [text](url) -> <a>text</a>
+    formatted = formatted.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" style="color: #1890ff; text-decoration: underline;">$1</a>');
+    
+    // Unordered lists: - item -> <li>item</li>
+    formatted = formatted.replace(/^- (.+)$/gm, '<li style="margin-left: 20px;">$1</li>');
+    
+    // Ordered lists: 1. item -> <li>item</li>
+    formatted = formatted.replace(/^\d+\. (.+)$/gm, '<li style="margin-left: 20px; list-style-type: decimal;">$1</li>');
+    
+    // Line breaks
+    formatted = formatted.replace(/\n/g, '<br/>');
+    
+    return formatted;
   };
 
   if (loading) {
@@ -726,9 +824,9 @@ const TicketDetails = () => {
                         </CommentAuthor>
                         <CommentTimestamp>{formatDate(comment.createdAt)}</CommentTimestamp>
                       </CommentHeader>
-                      <CommentContent>
-                        {comment.content}
-                      </CommentContent>
+                      <CommentContent 
+                        dangerouslySetInnerHTML={{ __html: renderFormattedComment(comment.content) }}
+                      />
                     </CommentItem>
                   ))
                 ) : (
@@ -737,11 +835,65 @@ const TicketDetails = () => {
               </CommentsTimeline>
 
               <CommentForm>
+                <RichTextToolbar>
+                  <ToolbarButton 
+                    onClick={() => handleFormatToggle('bold')}
+                    title="Bold (Ctrl+B)"
+                    disabled={commentSubmitting}
+                  >
+                    <BoldOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton 
+                    onClick={() => handleFormatToggle('italic')}
+                    title="Italic (Ctrl+I)"
+                    disabled={commentSubmitting}
+                  >
+                    <ItalicOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton 
+                    onClick={() => handleFormatToggle('underline')}
+                    title="Underline (Ctrl+U)"
+                    disabled={commentSubmitting}
+                  >
+                    <UnderlineOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton 
+                    onClick={() => insertList('unordered')}
+                    title="Bullet List"
+                    disabled={commentSubmitting}
+                  >
+                    <UnorderedListOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton 
+                    onClick={() => insertList('ordered')}
+                    title="Numbered List"
+                    disabled={commentSubmitting}
+                  >
+                    <OrderedListOutlined />
+                  </ToolbarButton>
+                  <ToolbarButton 
+                    onClick={insertLink}
+                    title="Insert Link"
+                    disabled={commentSubmitting}
+                  >
+                    <LinkOutlined />
+                  </ToolbarButton>
+                </RichTextToolbar>
+                
                 <CommentTextArea
+                  ref={(ref) => setTextAreaRef(ref)}
                   value={newComment}
                   onChange={handleCommentChange}
-                  placeholder="Add your comment here... (max 5000 characters)"
-                  rows={4}
+                  placeholder="Add your comment here... (max 5000 characters)
+
+Formatting tips:
+• **bold** for bold text
+• *italic* for italic text
+• __underline__ for underlined text
+• [link text](url) for links
+• - item for bullet points
+• 1. item for numbered lists"
+                  rows={6}
                   disabled={commentSubmitting}
                   maxLength={5000}
                 />

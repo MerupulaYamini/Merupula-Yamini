@@ -725,31 +725,53 @@ export const ToolbarButton = styled.button`
   color: #595959;
   font-size: 14px;
   font-weight: 600;
+  transition: all 0.2s ease;
   
-  &:hover {
+  &:hover:not(:disabled) {
     background: #e6f7ff;
     color: #1890ff;
+  }
+  
+  &:active:not(:disabled) {
+    background: #bae7ff;
   }
   
   &.active {
     background: #1890ff;
     color: white;
   }
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 `;
 
 export const CommentTextArea = styled.textarea`
   width: 100%;
-  min-height: 120px;
+  min-height: 150px;
   border: none;
+  border-top: 1px solid #f0f0f0;
   padding: 16px;
   font-size: 14px;
   line-height: 1.6;
   resize: vertical;
   outline: none;
   font-family: inherit;
+  background: white;
   
   &::placeholder {
     color: #bfbfbf;
+    font-size: 13px;
+  }
+  
+  &:focus {
+    background: #fafafa;
+  }
+  
+  &:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
   }
 `;
 
