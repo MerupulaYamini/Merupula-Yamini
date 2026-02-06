@@ -430,3 +430,70 @@ export const deleteUser = async (userId) => {
     throw error;
   }
 };
+
+/**
+ * Admin reset user password
+ * @param {number} userId - User ID whose password to reset
+ * @param {string} newPassword - New password for the user
+ * @returns {Promise} Success response
+ */
+export const adminResetUserPassword = async (userId, newPassword) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/password`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ newPassword }),
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to reset user password',
+        fieldErrors: data.fieldErrors || null,
+        data
+      };
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Get user profile picture as blob
+ * @param {number} userId - User ID
+ * @returns {Promise<Blob>} Profile picture blob
+ */
+export const getUserProfilePicture = async (userId) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/profile/${userId}/picture`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch profile picture');
+    }
+
+    const blob = await response.blob();
+    return blob;
+  } catch (error) {
+    throw error;
+  }
+};

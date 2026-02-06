@@ -3,7 +3,7 @@ import { Form, Input, Upload, message } from 'antd';
 import { UserOutlined, UploadOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
-import { getUserById, getCurrentUser, getMyProfile, updateMyProfile, changePassword } from '../../services/authService';
+import { getUserById, getCurrentUser, getMyProfile, updateMyProfile, changePassword, adminResetUserPassword, getUserProfilePicture } from '../../services/authService';
 import {
   ProfileContainer,
   ProfileHeader,
@@ -44,6 +44,8 @@ const Profile = () => {
   const [isOwnProfile, setIsOwnProfile] = useState(true);
   const [isCurrentUserAdmin, setIsCurrentUserAdmin] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(null);
+  const [profilePictureError, setProfilePictureError] = useState(false);
 
   // User data from API
   const [userData, setUserData] = useState({
@@ -60,6 +62,13 @@ const Profile = () => {
   // Fetch user profile data
   useEffect(() => {
     fetchUserProfile();
+    
+    // Cleanup function to revoke object URL
+    return () => {
+      if (profilePictureUrl) {
+        URL.revokeObjectURL(profilePictureUrl);
+      }
+    };
   }, [urlUserId]);
 
   const fetchUserProfile = async () => {
@@ -100,6 +109,19 @@ const Profile = () => {
         createdAt: userDetails.createdAt,
         avatar: null
       });
+
+      // Load profile picture
+      if (userDetails.id) {
+        try {
+          const blob = await getUserProfilePicture(userDetails.id);
+          const objectUrl = URL.createObjectURL(blob);
+          setProfilePictureUrl(objectUrl);
+          setProfilePictureError(false);
+        } catch (error) {
+          console.error('Failed to load profile picture:', error);
+          setProfilePictureError(true);
+        }
+      }
 
       profileForm.setFieldsValue({
         username: userDetails.username,
@@ -186,11 +208,25 @@ const Profile = () => {
   const handleAdminPasswordReset = async (values) => {
     setAdminPasswordLoading(true);
     
-    setTimeout(() => {
-      setAdminPasswordLoading(false);
-      message.success(`Password reset successfully for user: ${values.targetUserId}`);
+    try {
+      await adminResetUserPassword(values.targetUserId, values.newUserPassword);
+      message.success('Password reset successfully! User must login again with new password.');
       adminPasswordForm.resetFields();
-    }, 1000);
+    } catch (error) {
+      if (error.fieldErrors) {
+        Object.entries(error.fieldErrors).forEach(([field, errorMsg]) => {
+          message.error(`${field}: ${errorMsg}`);
+        });
+      } else if (error.status === 404) {
+        message.error('User not found');
+      } else if (error.status === 401) {
+        message.error('Only admin can perform this action');
+      } else {
+        message.error(error.message || 'Failed to reset user password');
+      }
+    } finally {
+      setAdminPasswordLoading(false);
+    }
   };
 
   const handleAdminPasswordCancel = () => {
@@ -214,9 +250,13 @@ const Profile = () => {
 
       setSelectedFile(file);
       message.success('Profile picture selected. Click "Save Changes" to upload.');
-      return false; // Prevent auto upload
+      return false;
     },
     showUploadList: false,
+  };
+
+  const handleProfilePictureError = () => {
+    setProfilePictureError(true);
   };
 
   return (
@@ -318,7 +358,8 @@ const Profile = () => {
                       <ProfileAvatar 
                         size={64} 
                         icon={<UserOutlined />}
-                        src={userData.avatar}
+                        src={!profilePictureError && profilePictureUrl ? profilePictureUrl : undefined}
+                        onError={handleProfilePictureError}
                       />
                     </AvatarContainer>
                     <div>
@@ -349,7 +390,8 @@ const Profile = () => {
                       <ProfileAvatar 
                         size={64} 
                         icon={<UserOutlined />}
-                        src={userData.avatar}
+                        src={!profilePictureError && profilePictureUrl ? profilePictureUrl : undefined}
+                        onError={handleProfilePictureError}
                       />
                     </AvatarContainer>
                   </AvatarSection>
@@ -494,12 +536,16 @@ const Profile = () => {
                     name="targetUserId"
                     rules={[
                       { required: true, message: 'Please input the user ID to reset password!' },
-                      { min: 3, message: 'User ID must be at least 3 characters!' }
+                      { 
+                        pattern: /^\d+$/, 
+                        message: 'User ID must be a number!' 
+                      }
                     ]}
                   >
                     <FormInput
-                      placeholder="Enter user ID to reset password"
+                      placeholder="Enter user ID (e.g., 5)"
                       disabled={adminPasswordLoading}
+                      type="number"
                     />
                   </Form.Item>
                 </FormGroup>
@@ -510,11 +556,15 @@ const Profile = () => {
                     name="newUserPassword"
                     rules={[
                       { required: true, message: 'Please input the new password for user!' },
-                      { min: 6, message: 'Password must be at least 6 characters!' }
+                      { min: 8, message: 'Password must be at least 8 characters!' },
+                      {
+                        pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+                        message: 'Password must contain uppercase, lowercase, number, and special character!',
+                      },
                     ]}
                   >
                     <PasswordInput
-                      placeholder="Enter new password for user"
+                      placeholder="Min 8 chars with uppercase, lowercase, number & special char"
                       disabled={adminPasswordLoading}
                     />
                   </Form.Item>
@@ -543,6 +593,18 @@ const Profile = () => {
                     />
                   </Form.Item>
                 </FormGroup>
+
+                <div style={{ 
+                  padding: '12px', 
+                  backgroundColor: '#fff7e6', 
+                  border: '1px solid #ffd591',
+                  borderRadius: '6px',
+                  marginBottom: '16px'
+                }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: '#fa8c16' }}>
+                    ⚠️ <strong>Warning:</strong> Resetting a user's password will invalidate their current session and force them to login again with the new password.
+                  </p>
+                </div>
 
                 <ButtonGroup>
                   <CancelButton onClick={handleAdminPasswordCancel} disabled={adminPasswordLoading}>

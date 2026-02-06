@@ -17,7 +17,7 @@ import {
   LinkOutlined
 } from '@ant-design/icons';
 import MainLayout from '../../components/layout/MainLayout';
-import { getTicketById, deleteTicket, updateTicketStatus, addComment, mapStatus, mapLabel } from '../../services/ticketService';
+import { getTicketById, deleteTicket, updateTicketStatus, addComment, mapStatus, mapLabel, getTicketAttachmentUrl, downloadTicketAttachment } from '../../services/ticketService';
 import { getCurrentUser } from '../../services/authService';
 import {
   TicketDetailsContainer,
@@ -398,17 +398,39 @@ const TicketDetails = () => {
     });
   };
 
-  const getAttachmentIcon = (type) => {
-    switch (type) {
-      case 'video': return <VideoCameraOutlined />;
-      case 'document': return <FileTextOutlined />;
-      default: return <PaperClipOutlined />;
+  const getAttachmentIcon = (contentType) => {
+    if (!contentType) return <PaperClipOutlined />;
+    
+    if (contentType.startsWith('image/')) return '🖼️';
+    if (contentType.startsWith('video/')) return '🎥';
+    if (contentType.includes('pdf')) return '📄';
+    if (contentType.includes('word') || contentType.includes('document')) return '📝';
+    if (contentType.includes('excel') || contentType.includes('spreadsheet')) return '📊';
+    if (contentType.includes('zip') || contentType.includes('rar')) return '📦';
+    return '📎';
+  };
+
+  const handleAttachmentClick = async (attachment, index) => {
+    try {
+      await downloadTicketAttachment(ticketId, index, attachment.filename);
+      message.success(`Downloading ${attachment.filename}...`);
+    } catch (error) {
+      if (error.status === 401) {
+        message.error('You are not allowed to access this attachment');
+      } else if (error.status === 404) {
+        message.error('Attachment not found');
+      } else {
+        message.error(error.message || 'Failed to download attachment');
+      }
     }
   };
 
-  const handleAttachmentClick = (attachment) => {
-    message.info(`Opening ${attachment.name}...`);
-    // In real app, this would open/download the file
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
   const handleAddComment = async () => {
@@ -620,34 +642,54 @@ const TicketDetails = () => {
               
               <SectionTitle>Description</SectionTitle>
               <DescriptionText>{ticket.description || 'No description provided'}</DescriptionText>
-              <DescriptionText>{ticket.description}</DescriptionText>
               
-              {ticket.attachments && ticket.attachments.length > 0 && (
+              {ticket.attachmentMeta && ticket.attachmentMeta.length > 0 && (
                 <AttachmentsSection>
-                  <AttachmentsTitle>Attachments</AttachmentsTitle>
-                  <AttachmentsContainer>
-                    <AttachmentPreview>
-                      <VideoCameraOutlined className="preview-icon" />
-                      <div className="preview-text">Profile Screen Mockup Video</div>
-                    </AttachmentPreview>
-                    
-                    <AttachmentsList>
-                      {ticket.attachments.map((attachment) => (
-                        <AttachmentItem 
-                          key={attachment.id}
-                          onClick={() => handleAttachmentClick(attachment)}
-                        >
-                          <AttachmentIcon>
-                            {getAttachmentIcon(attachment.type)}
-                          </AttachmentIcon>
-                          <AttachmentInfo>
-                            <AttachmentName>{attachment.name}</AttachmentName>
-                            <AttachmentSize>{attachment.size}</AttachmentSize>
-                          </AttachmentInfo>
-                        </AttachmentItem>
-                      ))}
-                    </AttachmentsList>
-                  </AttachmentsContainer>
+                  <AttachmentsTitle>
+                    <PaperClipOutlined style={{ marginRight: '8px' }} />
+                    Attachments ({ticket.attachmentMeta.length})
+                  </AttachmentsTitle>
+                  <AttachmentsList>
+                    {ticket.attachmentMeta.map((attachment, index) => (
+                      <AttachmentItem 
+                        key={index}
+                        onClick={() => handleAttachmentClick(attachment, index)}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <AttachmentIcon>
+                          {getAttachmentIcon(attachment.contentType)}
+                        </AttachmentIcon>
+                        <AttachmentInfo>
+                          <AttachmentName>{attachment.filename}</AttachmentName>
+                          <AttachmentSize>{formatFileSize(attachment.size)}</AttachmentSize>
+                        </AttachmentInfo>
+                      </AttachmentItem>
+                    ))}
+                  </AttachmentsList>
+                </AttachmentsSection>
+              )}
+              
+              {ticket.attachmentUrls && ticket.attachmentUrls.length > 0 && (
+                <AttachmentsSection>
+                  <AttachmentsTitle>
+                    <LinkOutlined style={{ marginRight: '8px' }} />
+                    External Links ({ticket.attachmentUrls.length})
+                  </AttachmentsTitle>
+                  <AttachmentsList>
+                    {ticket.attachmentUrls.map((url, index) => (
+                      <AttachmentItem 
+                        key={index}
+                        onClick={() => window.open(url, '_blank')}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <AttachmentIcon>🔗</AttachmentIcon>
+                        <AttachmentInfo>
+                          <AttachmentName>{url}</AttachmentName>
+                          <AttachmentSize>External URL</AttachmentSize>
+                        </AttachmentInfo>
+                      </AttachmentItem>
+                    ))}
+                  </AttachmentsList>
                 </AttachmentsSection>
               )}
             </DescriptionSection>

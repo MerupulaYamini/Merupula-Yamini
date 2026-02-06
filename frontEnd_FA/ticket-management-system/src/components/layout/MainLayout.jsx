@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, message, Modal } from 'antd';
 import {
   DashboardOutlined,
@@ -10,7 +10,7 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { logoutUser, getCurrentUser } from '../../services/authService';
+import { logoutUser, getCurrentUser, getUserProfilePicture } from '../../services/authService';
 import {
   DashboardLayout,
   DashboardHeader,
@@ -27,10 +27,42 @@ const MainLayout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profilePictureUrl, setProfilePictureUrl] = useState(null);
+  const [profilePictureError, setProfilePictureError] = useState(false);
   
   // Check if current user is admin
   const currentUser = getCurrentUser();
   const isAdmin = currentUser.roles && currentUser.roles.includes('ADMIN');
+  
+  // Load profile picture
+  useEffect(() => {
+    const loadProfilePicture = async () => {
+      if (currentUser.userId) {
+        try {
+          const blob = await getUserProfilePicture(currentUser.userId);
+          const objectUrl = URL.createObjectURL(blob);
+          setProfilePictureUrl(objectUrl);
+          setProfilePictureError(false);
+        } catch (error) {
+          console.error('Failed to load profile picture:', error);
+          setProfilePictureError(true);
+        }
+      }
+    };
+    
+    loadProfilePicture();
+    
+    // Cleanup function to revoke object URL
+    return () => {
+      if (profilePictureUrl) {
+        URL.revokeObjectURL(profilePictureUrl);
+      }
+    };
+  }, [currentUser.userId]);
+  
+  const handleProfilePictureError = () => {
+    setProfilePictureError(true);
+  };
   
   // Get current page from URL path
   const getCurrentKey = () => {
@@ -155,7 +187,12 @@ const MainLayout = ({ children }) => {
         </div>
         
         <UserSection>
-          <UserAvatar icon={<UserOutlined />} onClick={handleProfileClick} />
+          <UserAvatar 
+            icon={<UserOutlined />} 
+            onClick={handleProfileClick}
+            src={!profilePictureError && profilePictureUrl ? profilePictureUrl : undefined}
+            onError={handleProfilePictureError}
+          />
         </UserSection>
       </DashboardHeader>
 

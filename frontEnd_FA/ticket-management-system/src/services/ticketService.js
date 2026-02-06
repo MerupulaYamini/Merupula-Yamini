@@ -336,6 +336,64 @@ export const mapLabelToBackend = (label) => {
 };
 
 /**
+ * Get ticket attachment URL
+ * @param {number} ticketId - Ticket ID
+ * @param {number} index - Attachment index (0-based)
+ * @returns {string} Attachment URL
+ */
+export const getTicketAttachmentUrl = (ticketId, index) => {
+  const token = localStorage.getItem('token');
+  return `${API_BASE_URL}/tickets/${ticketId}/attachments/${index}?token=${token}`;
+};
+
+/**
+ * Download ticket attachment
+ * @param {number} ticketId - Ticket ID
+ * @param {number} index - Attachment index
+ * @param {string} filename - Filename for download
+ */
+export const downloadTicketAttachment = async (ticketId, index, filename) => {
+  try {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/tickets/${ticketId}/attachments/${index}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json();
+        throw {
+          status: response.status,
+          message: data.message || 'Failed to download attachment',
+          data
+        };
+      } else {
+        throw {
+          status: response.status,
+          message: 'Failed to download attachment'
+        };
+      }
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `attachment-${index}`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
  * Update ticket status
  * @param {number} ticketId - Ticket ID
  * @param {string} status - New status (TODO, IN_PROGRESS, PAUSED, PR_REVIEW, READY_TO_DEPLOY, DEPLOYED_DONE)
