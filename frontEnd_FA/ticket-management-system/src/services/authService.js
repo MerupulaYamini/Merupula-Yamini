@@ -441,7 +441,7 @@ export const deleteUser = async (userId) => {
  */
 export const adminResetUserPassword = async (userId, newPassword) => {
   try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/admin/users/${userId}/password`, {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/password`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ newPassword }),
@@ -463,6 +463,47 @@ export const adminResetUserPassword = async (userId, newPassword) => {
       throw {
         status: response.status,
         message: data.message || 'Failed to reset user password',
+        fieldErrors: data.fieldErrors || null,
+        data
+      };
+    }
+
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Update user role (Admin only)
+ * @param {number} userId - User ID whose role to update
+ * @param {string} role - New role (ADMIN or EMPLOYEE)
+ * @returns {Promise} Success response
+ */
+export const updateUserRole = async (userId, role) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ role }),
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw {
+        status: response.status,
+        message: 'Server returned an invalid response',
+        data: text
+      };
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw {
+        status: response.status,
+        message: data.message || 'Failed to update user role',
         fieldErrors: data.fieldErrors || null,
         data
       };

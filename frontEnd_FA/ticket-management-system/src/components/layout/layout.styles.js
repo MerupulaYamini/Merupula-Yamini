@@ -19,11 +19,11 @@ export const DashboardLayout = styled(Layout)`
 export const DashboardHeader = styled(Header)`
   background: #fff;
   padding: 0 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 2px solid #e8e8e8;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -91,13 +91,21 @@ export const UserAvatar = styled(Avatar)`
 
 export const DashboardSider = styled(Sider)`
   background: #fff;
-  border-right: 1px solid #f0f0f0;
+  border-right: 2px solid #e8e8e8;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  position: fixed;
+  left: 0;
+  top: 64px;
+  bottom: 0;
+  z-index: 9;
+  overflow-y: auto;
   
   .ant-menu {
     border-right: none;
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 100%;
+    padding-bottom: 60px;
   }
   
   .ant-menu-item {
@@ -113,12 +121,28 @@ export const DashboardSider = styled(Sider)`
       }
     }
 
-    &:last-child {
-      margin-top: auto;
-      margin-bottom: 16px;
+    &.logout-item {
+      position: fixed;
+      bottom: 8px;
+      left: 8px;
+      right: 8px;
+      width: calc(200px - 16px);
+      margin: 0;
       border: 1.5px solid #ffccc7;
+      background-color: #fff;
+      z-index: 10;
       
       &:hover {
+        background-color: #fff2f0;
+        border-color: #ff4d4f;
+        
+        .ant-menu-item-icon,
+        .ant-menu-title-content {
+          color: #ff4d4f;
+        }
+      }
+      
+      &.ant-menu-item-selected {
         background-color: #fff2f0;
         border-color: #ff4d4f;
         
@@ -131,17 +155,17 @@ export const DashboardSider = styled(Sider)`
   }
 
   @media (max-width: ${breakpoints.tablet}) {
-    position: fixed;
-    left: 0;
-    top: 64px;
-    bottom: 0;
-    z-index: 1000;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
 
     &.open {
       transform: translateX(0);
+    }
+    
+    .ant-menu-item.logout-item {
+      position: absolute;
     }
   }
 `;
@@ -192,9 +216,11 @@ export const DashboardContent = styled(Content)`
   padding: 24px;
   background: #f5f5f5;
   min-height: calc(100vh - 64px);
+  margin-left: 200px;
 
   @media (max-width: ${breakpoints.tablet}) {
     padding: 16px;
+    margin-left: 0;
   }
 
   @media (max-width: ${breakpoints.mobile}) {

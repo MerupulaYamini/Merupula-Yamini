@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '../../components/layout/MainLayout';
-import { getAllUsers, getUserById, deleteUser } from '../../services/authService';
+import { getAllUsers, getUserById, deleteUser, updateUserRole } from '../../services/authService';
 import {
   PageTitle,
   PageSubtitle,
@@ -86,6 +86,26 @@ const UserManagement = () => {
           fetchUsers();
         } catch (error) {
           message.error(error.message || 'Failed to delete user');
+        }
+      }
+    });
+  };
+
+  const handleRoleChange = (userId, username, currentRole, newRole) => {
+    Modal.confirm({
+      title: 'Update User Role',
+      icon: <ExclamationCircleOutlined />,
+      content: `Are you sure you want to change "${username}"'s role from ${currentRole} to ${newRole}?`,
+      okText: 'Update Role',
+      okType: 'primary',
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          await updateUserRole(userId, newRole);
+          message.success(`User role updated to ${newRole} successfully`);
+          fetchUsers();
+        } catch (error) {
+          message.error(error.message || 'Failed to update user role');
         }
       }
     });
@@ -199,9 +219,27 @@ const UserManagement = () => {
                     <UserName>{user.username}</UserName>
                   </UserInfoContainer>
                   <UserName>{user.email}</UserName>
-                  <RoleTag className={isAdmin ? 'admin' : 'employee'}>
-                    {isAdmin ? 'Admin' : 'Employee'}
-                  </RoleTag>
+                  <FilterSelect 
+                    value={isAdmin ? 'ADMIN' : 'EMPLOYEE'}
+                    onChange={(e) => {
+                      const newRole = e.target.value;
+                      const currentRole = isAdmin ? 'ADMIN' : 'EMPLOYEE';
+                      if (newRole !== currentRole) {
+                        handleRoleChange(user.id, user.username, currentRole, newRole);
+                      }
+                    }}
+                    disabled={loading}
+                    style={{ 
+                      minWidth: '120px',
+                      backgroundColor: isAdmin ? '#e6f7ff' : '#f6ffed',
+                      color: isAdmin ? '#1890ff' : '#52c41a',
+                      fontWeight: '500',
+                      border: isAdmin ? '1px solid #91d5ff' : '1px solid #b7eb8f'
+                    }}
+                  >
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="ADMIN">Admin</option>
+                  </FilterSelect>
                   {getStatusTag(user.status)}
                   <ActionMenu>
                     <ViewButton 

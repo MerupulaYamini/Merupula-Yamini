@@ -105,7 +105,7 @@ const MainLayout = ({ children }) => {
       icon: <LogoutOutlined />,
       label: 'Logout',
       danger: true,
-      style: { marginTop: 'auto', color: '#ff4d4f' }
+      className: 'logout-item'
     }
   ];
 

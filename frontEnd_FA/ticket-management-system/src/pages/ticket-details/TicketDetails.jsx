@@ -480,17 +480,22 @@ const TicketDetails = () => {
     const start = textAreaRef.selectionStart;
     const end = textAreaRef.selectionEnd;
     const selectedText = newComment.substring(start, end);
+    
+    if (!selectedText) {
+      message.info('Please select text first to apply formatting');
+      return;
+    }
+    
     const beforeText = newComment.substring(0, start);
     const afterText = newComment.substring(end);
     
     const newText = beforeText + prefix + selectedText + suffix + afterText;
     setNewComment(newText);
     
-    // Set cursor position after formatting
+    // Select the formatted text
     setTimeout(() => {
-      const newCursorPos = start + prefix.length + selectedText.length + suffix.length;
       textAreaRef.focus();
-      textAreaRef.setSelectionRange(newCursorPos, newCursorPos);
+      textAreaRef.setSelectionRange(start, start + prefix.length + selectedText.length + suffix.length);
     }, 0);
   };
 
@@ -514,19 +519,42 @@ const TicketDetails = () => {
     if (!textAreaRef) return;
     
     const start = textAreaRef.selectionStart;
+    const end = textAreaRef.selectionEnd;
+    const selectedText = newComment.substring(start, end);
     const beforeText = newComment.substring(0, start);
-    const afterText = newComment.substring(start);
+    const afterText = newComment.substring(end);
     
-    const listPrefix = type === 'ordered' ? '1. ' : '- ';
-    const newText = beforeText + (beforeText && !beforeText.endsWith('\n') ? '\n' : '') + listPrefix + afterText;
-    
-    setNewComment(newText);
-    
-    setTimeout(() => {
-      const newCursorPos = start + (beforeText && !beforeText.endsWith('\n') ? 1 : 0) + listPrefix.length;
-      textAreaRef.focus();
-      textAreaRef.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
+    if (selectedText) {
+      // If text is selected, convert each line to a list item
+      const lines = selectedText.split('\n');
+      const listItems = lines.map((line, index) => {
+        if (line.trim()) {
+          return type === 'ordered' ? `${index + 1}. ${line}` : `- ${line}`;
+        }
+        return line;
+      }).join('\n');
+      
+      const newText = beforeText + listItems + afterText;
+      setNewComment(newText);
+      
+      setTimeout(() => {
+        textAreaRef.focus();
+        textAreaRef.setSelectionRange(start, start + listItems.length);
+      }, 0);
+    } else {
+      // If no selection, just insert a list item at cursor
+      const listPrefix = type === 'ordered' ? '1. ' : '- ';
+      const needsNewline = beforeText && !beforeText.endsWith('\n');
+      const newText = beforeText + (needsNewline ? '\n' : '') + listPrefix + afterText;
+      
+      setNewComment(newText);
+      
+      setTimeout(() => {
+        const newCursorPos = start + (needsNewline ? 1 : 0) + listPrefix.length;
+        textAreaRef.focus();
+        textAreaRef.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    }
   };
 
   const insertLink = () => {
@@ -838,21 +866,21 @@ const TicketDetails = () => {
                 <RichTextToolbar>
                   <ToolbarButton 
                     onClick={() => handleFormatToggle('bold')}
-                    title="Bold (Ctrl+B)"
+                    title="Bold - Select text first"
                     disabled={commentSubmitting}
                   >
                     <BoldOutlined />
                   </ToolbarButton>
                   <ToolbarButton 
                     onClick={() => handleFormatToggle('italic')}
-                    title="Italic (Ctrl+I)"
+                    title="Italic - Select text first"
                     disabled={commentSubmitting}
                   >
                     <ItalicOutlined />
                   </ToolbarButton>
                   <ToolbarButton 
                     onClick={() => handleFormatToggle('underline')}
-                    title="Underline (Ctrl+U)"
+                    title="Underline - Select text first"
                     disabled={commentSubmitting}
                   >
                     <UnderlineOutlined />
@@ -873,7 +901,7 @@ const TicketDetails = () => {
                   </ToolbarButton>
                   <ToolbarButton 
                     onClick={insertLink}
-                    title="Insert Link"
+                    title="Insert Link - Select text first"
                     disabled={commentSubmitting}
                   >
                     <LinkOutlined />
@@ -886,17 +914,35 @@ const TicketDetails = () => {
                   onChange={handleCommentChange}
                   placeholder="Add your comment here... (max 5000 characters)
 
-Formatting tips:
-• **bold** for bold text
-• *italic* for italic text
-• __underline__ for underlined text
-• [link text](url) for links
-• - item for bullet points
-• 1. item for numbered lists"
+💡 Tip: Select text and use the toolbar buttons above to format it!"
                   rows={6}
                   disabled={commentSubmitting}
                   maxLength={5000}
                 />
+                
+                {newComment && (
+                  <div style={{ 
+                    padding: '12px 16px', 
+                    background: '#f9f9f9', 
+                    borderTop: '1px solid #f0f0f0',
+                    fontSize: '12px',
+                    color: '#8c8c8c'
+                  }}>
+                    <strong>Preview:</strong>
+                    <div 
+                      style={{ 
+                        marginTop: '8px', 
+                        padding: '8px', 
+                        background: 'white', 
+                        borderRadius: '4px',
+                        fontSize: '14px',
+                        color: '#262626',
+                        minHeight: '40px'
+                      }}
+                      dangerouslySetInnerHTML={{ __html: renderFormattedComment(newComment) }}
+                    />
+                  </div>
+                )}
                 
                 <CommentActions>
                   <span style={{ color: '#8c8c8c', fontSize: '12px' }}>
